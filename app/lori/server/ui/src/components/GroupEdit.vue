@@ -1,29 +1,38 @@
 <script lang="ts">
-import {useDialogsStore} from "@/stores/dialogs";
+import { useDialogsStore } from "@/stores/dialogs";
 import {
   computed,
   defineComponent,
   onMounted,
   PropType,
   reactive,
-  ref, useAttrs,
+  ref,
+  useAttrs,
   watch,
 } from "vue";
 import api from "@/api/api";
-import {GroupRest} from "@/generated-sources/openapi/models/GroupRest";
-import {required} from "@vuelidate/validators";
-import {useVuelidate} from "@vuelidate/core";
+import { GroupRest } from "@/generated-sources/openapi/models/GroupRest";
+import { required } from "@vuelidate/validators";
+import { useVuelidate } from "@vuelidate/core";
 import GroupDeleteDialog from "@/components/GroupDeleteDialog.vue";
 import error from "@/utils/error";
-import {GroupIdCreated, OldGroupVersionRest} from "@/generated-sources/openapi";
-import {unparse} from "papaparse";
-import {useUserStore} from "@/stores/user";
-import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
+import {
+  GroupIdCreated,
+  OldGroupVersionRest,
+} from "@/generated-sources/openapi";
+import { unparse } from "papaparse";
+import { useUserStore } from "@/stores/user";
+import {
+  RouteLocationNormalizedLoaded,
+  Router,
+  useRoute,
+  useRouter,
+} from "vue-router";
 import url from "@/utils/url";
-import {ReadonlyDataTableHeader} from "@/types/vuetify";
+import { ReadonlyDataTableHeader } from "@/types/vuetify";
 
 export default defineComponent({
-  components: {GroupDeleteDialog},
+  components: { GroupDeleteDialog },
   props: {
     isNew: {
       type: Boolean,
@@ -40,10 +49,10 @@ export default defineComponent({
     "updateGroupSuccessful",
     "groupEditClosed",
   ],
-  setup(props, {emit}) {
+  setup(props, { emit }) {
     // Router + Route
-    const router: Router = useRouter()
-    const route: RouteLocationNormalizedLoaded = useRoute()
+    const router: Router = useRouter();
+    const route: RouteLocationNormalizedLoaded = useRoute();
 
     /**
      * Vuelidate.
@@ -56,14 +65,14 @@ export default defineComponent({
 
     const ipAddressCheck = (value: string, siblings: ValidatingFields) => {
       return !(
-          siblings.ipAddressesFile == null && siblings.ipAddressesText == ""
+        siblings.ipAddressesFile == null && siblings.ipAddressesText == ""
       );
     };
 
     const rules = {
-      title: {required},
-      ipAddressesFile: {ipAddressCheck},
-      ipAddressesText: {ipAddressCheck},
+      title: { required },
+      ipAddressesFile: { ipAddressCheck },
+      ipAddressesText: { ipAddressCheck },
     };
 
     const formState = reactive({
@@ -82,10 +91,10 @@ export default defineComponent({
     const errorIpAddresses = computed(() => {
       const errors: Array<string> = [];
       if (
-          v$.value.ipAddressesText.$invalid &&
-          v$.value.ipAddressesText.$dirty &&
-          v$.value.ipAddressesFile.$invalid &&
-          v$.value.ipAddressesFile.$dirty
+        v$.value.ipAddressesText.$invalid &&
+        v$.value.ipAddressesText.$dirty &&
+        v$.value.ipAddressesFile.$invalid &&
+        v$.value.ipAddressesFile.$dirty
       ) {
         errors.push("Es wird eine Eingabe für die IP-Adressen erwartet.");
       }
@@ -104,7 +113,7 @@ export default defineComponent({
     const dialogTitle = computed(() => {
       if (props.isNew) {
         return "Neue IP-Gruppe anlegen";
-      } else if (userStore.isLoggedIn){
+      } else if (userStore.isLoggedIn) {
         return "IP-Gruppe bearbeiten";
       } else {
         return "IP-Gruppe anzeigen";
@@ -120,11 +129,7 @@ export default defineComponent({
       v$.value.$reset();
       snackbarModel.value = false;
       snackbarMessage.value = "";
-      url.removeQueryParameters(
-          route,
-          router,
-          [url.QUERY_PARAMETER_GROUP_ID],
-      );
+      url.removeQueryParameters(route, router, [url.QUERY_PARAMETER_GROUP_ID]);
       emit("groupEditClosed");
     };
 
@@ -175,52 +180,57 @@ export default defineComponent({
         sortable: false,
       },
     ];
-    const oldVersions = ref([] as Array<OldGroupVersionRest>)
+    const oldVersions = ref([] as Array<OldGroupVersionRest>);
     const showDialogOldVersion = ref(false);
     const oldVersion = ref({} as GroupRest);
 
     const showVersion = (version: number) => {
       api
-          .getGroupById(groupTmp.value.groupId, version)
-          .then((receivedGroup: GroupRest) => {
-            oldVersion.value = receivedGroup;
-            showDialogOldVersion.value = true;
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              snackbarMessage.value = errMsg;
-              snackbarModel.value = true;
-              snackbarColor.value = "error";
-            });
+        .getGroupById(groupTmp.value.groupId, version)
+        .then((receivedGroup: GroupRest) => {
+          oldVersion.value = receivedGroup;
+          showDialogOldVersion.value = true;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            snackbarMessage.value = errMsg;
+            snackbarModel.value = true;
+            snackbarColor.value = "error";
           });
+        });
     };
 
     const downloadVersion = (version: number) => {
       api
-          .getGroupById(groupTmp.value.groupId, version)
-          .then((receivedGroup: GroupRest) => {
-            oldVersion.value = receivedGroup;
+        .getGroupById(groupTmp.value.groupId, version)
+        .then((receivedGroup: GroupRest) => {
+          oldVersion.value = receivedGroup;
 
-            let text = receivedGroup.allowedAddresses == undefined ? '' : unparse(receivedGroup.allowedAddresses);
-            let filename = 'version.csv';
-            let element = document.createElement('a');
-            element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(text));
-            element.setAttribute('download', filename);
+          let text =
+            receivedGroup.allowedAddresses == undefined
+              ? ""
+              : unparse(receivedGroup.allowedAddresses);
+          let filename = "version.csv";
+          let element = document.createElement("a");
+          element.setAttribute(
+            "href",
+            "data:text/csv;charset=utf-8," + encodeURIComponent(text),
+          );
+          element.setAttribute("download", filename);
 
+          element.style.display = "none";
+          document.body.appendChild(element);
 
-            element.style.display = 'none';
-            document.body.appendChild(element);
-
-            element.click();
-            document.body.removeChild(element);
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              snackbarMessage.value = errMsg;
-              snackbarModel.value = true;
-              snackbarColor.value = "error";
-            });
+          element.click();
+          document.body.removeChild(element);
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            snackbarMessage.value = errMsg;
+            snackbarModel.value = true;
+            snackbarColor.value = "error";
           });
+        });
     };
 
     /**
@@ -267,37 +277,37 @@ export default defineComponent({
 
     const createGroup = () => {
       api
-          .addGroup(groupTmp.value)
-          .then((gIdC: GroupIdCreated) => {
-            formState.groupId = gIdC.groupId;
-            emit("addGroupSuccessful", gIdC.groupId);
-            snackbarColor.value = "success"
-            snackbarMessage.value = "Gruppe erfolgreich erstellt.";
+        .addGroup(groupTmp.value)
+        .then((gIdC: GroupIdCreated) => {
+          formState.groupId = gIdC.groupId;
+          emit("addGroupSuccessful", gIdC.groupId);
+          snackbarColor.value = "success";
+          snackbarMessage.value = "Gruppe erfolgreich erstellt.";
+          snackbarModel.value = true;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            snackbarMessage.value = errMsg;
             snackbarModel.value = true;
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              snackbarMessage.value = errMsg;
-              snackbarModel.value = true;
-            });
           });
+        });
     };
 
     const updateGroup = () => {
       api
-          .updateGroup(groupTmp.value)
-          .then(() => {
-            emit("updateGroupSuccessful", groupTmp.value.groupId);
-            snackbarColor.value = "success"
-            snackbarMessage.value = "Gruppe erfolgreich geupdated.";
+        .updateGroup(groupTmp.value)
+        .then(() => {
+          emit("updateGroupSuccessful", groupTmp.value.groupId);
+          snackbarColor.value = "success";
+          snackbarMessage.value = "Gruppe erfolgreich geupdated.";
+          snackbarModel.value = true;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            snackbarMessage.value = errMsg;
             snackbarModel.value = true;
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              snackbarMessage.value = errMsg;
-              snackbarModel.value = true;
-            });
           });
+        });
     };
 
     const save = () => {
@@ -309,25 +319,25 @@ export default defineComponent({
         groupTmp.value.title = formState.title;
         groupTmp.value.description = formState.description;
         if (
-            formState.ipAddressesText == "" &&
-            formState.ipAddressesFile != undefined
+          formState.ipAddressesText == "" &&
+          formState.ipAddressesFile != undefined
         ) {
           formState.ipAddressesFile
-              .text()
-              .then((r) => {
-                groupTmp.value.allowedAddressesRaw = r;
-                if (props.isNew) {
-                  createGroup();
-                } else {
-                  updateGroup();
-                }
-              })
-              .catch((e) => {
-                error.errorHandling(e, (errMsg: string) => {
-                  snackbarModel.value = true;
-                  snackbarMessage.value = errMsg;
-                });
+            .text()
+            .then((r) => {
+              groupTmp.value.allowedAddressesRaw = r;
+              if (props.isNew) {
+                createGroup();
+              } else {
+                updateGroup();
+              }
+            })
+            .catch((e) => {
+              error.errorHandling(e, (errMsg: string) => {
+                snackbarModel.value = true;
+                snackbarMessage.value = errMsg;
               });
+            });
           return;
         }
         groupTmp.value.allowedAddressesRaw = formState.ipAddressesText;
@@ -355,15 +365,24 @@ export default defineComponent({
 
     // Changes
     const formWasChanged = computed(() => {
-      return formState.title != (groupTmp.value.title == undefined ? "" : groupTmp.value.title) ||
-          formState.description != (groupTmp.value.description == undefined ? "" : groupTmp.value.description) ||
-          formState.ipAddressesText != (groupTmp.value.allowedAddressesRaw == undefined ? "" : groupTmp.value.allowedAddressesRaw) ||
-          formState.ipAddressesFile != undefined
+      return (
+        formState.title !=
+          (groupTmp.value.title == undefined ? "" : groupTmp.value.title) ||
+        formState.description !=
+          (groupTmp.value.description == undefined
+            ? ""
+            : groupTmp.value.description) ||
+        formState.ipAddressesText !=
+          (groupTmp.value.allowedAddressesRaw == undefined
+            ? ""
+            : groupTmp.value.allowedAddressesRaw) ||
+        formState.ipAddressesFile != undefined
+      );
     });
 
     const unsavedChangesDialog = ref(false);
     const checkForChangesAndClose = () => {
-      if(formWasChanged.value){
+      if (formWasChanged.value) {
         unsavedChangesDialog.value = true;
       } else {
         close();
@@ -377,18 +396,21 @@ export default defineComponent({
     const loginStatusProps = computed(() => {
       if (!userStore.isLoggedIn) {
         return {
-          "readonly": true,
+          readonly: true,
           "bg-color": "grey-lighten-2",
         };
       } else {
         return {
           "bg-color": "white",
-          "clearable" : true,
+          clearable: true,
         };
       }
     });
     const attrs = useAttrs();
-    const attrWithLogin = computed(() => ({ ...attrs, ...loginStatusProps.value }));
+    const attrWithLogin = computed(() => ({
+      ...attrs,
+      ...loginStatusProps.value,
+    }));
 
     return {
       attrWithLogin,
@@ -438,24 +460,23 @@ export default defineComponent({
   <v-card class="my-scroll" position="relative">
     <v-toolbar>
       <v-spacer></v-spacer>
-      <v-btn
-          icon="mdi-close"
-          @click="checkForChangesAndClose"
-      ></v-btn>
+      <v-btn icon="mdi-close" @click="checkForChangesAndClose"></v-btn>
     </v-toolbar>
     <v-dialog
-        v-model="showDialogOldVersion"
-        max-width="1000px"
-        max-height="850px"
-        :retain-focus="false"
+      v-model="showDialogOldVersion"
+      max-width="1000px"
+      max-height="850px"
+      :retain-focus="false"
     >
       <v-card>
-        <v-card-title>IP Gruppen für Version {{oldVersion.version}}</v-card-title>
+        <v-card-title
+          >IP Gruppen für Version {{ oldVersion.version }}</v-card-title
+        >
         <v-card-text>
           <v-textarea
-              label="IP-Adressen"
-              v-model="oldVersion.allowedAddressesRaw"
-              variant="outlined"
+            label="IP-Adressen"
+            v-model="oldVersion.allowedAddressesRaw"
+            variant="outlined"
           ></v-textarea>
         </v-card-text>
       </v-card>
@@ -468,49 +489,43 @@ export default defineComponent({
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-              @click="closeUnsavedChangesDialog"
-              color="blue darken-1"
-          >Abbrechen
+          <v-btn @click="closeUnsavedChangesDialog" color="blue darken-1"
+            >Abbrechen
           </v-btn>
-          <v-btn
-              color="error"
-              @click="close">
-            Änderungen verwerfen
-          </v-btn>
+          <v-btn color="error" @click="close"> Änderungen verwerfen </v-btn>
           <v-spacer></v-spacer>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-card-title>{{ dialogTitle }}
-    </v-card-title>
-    <v-card-text style="height:1100px;">
+    <v-card-title>{{ dialogTitle }} </v-card-title>
+    <v-card-text style="height: 1100px">
       <v-snackbar
-          v-model="snackbarModel"
-          closable
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          :color="snackbarColor">
+        v-model="snackbarModel"
+        closable
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="5000"
+        :color="snackbarColor"
+      >
         {{ snackbarMessage }}
       </v-snackbar>
       <v-dialog v-model="dialogStore.groupDeleteActivated" max-width="700px">
         <GroupDeleteDialog
-            :group-id="groupTmp.groupId"
-            v-on:deleteGroupSuccessful="deleteGroupSuccessful"
+          :group-id="groupTmp.groupId"
+          v-on:deleteGroupSuccessful="deleteGroupSuccessful"
         ></GroupDeleteDialog>
       </v-dialog>
       <v-row>
         <v-col cols="4">Name</v-col>
         <v-col cols="8">
           <v-text-field
-              variant="outlined"
-              hint="Name der Berechtigungsgruppe"
-              v-model="formState.title"
-              v-bind="attrWithLogin"
-              :error-messages="errorName"
+            variant="outlined"
+            hint="Name der Berechtigungsgruppe"
+            v-model="formState.title"
+            v-bind="attrWithLogin"
+            :error-messages="errorName"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -518,10 +533,10 @@ export default defineComponent({
         <v-col cols="4"> Erstellt am</v-col>
         <v-col cols="8">
           <v-text-field
-              v-model="computedGroup.createdOn"
-              variant="outlined"
-              readonly
-              bg-color="grey-lighten-2"
+            v-model="computedGroup.createdOn"
+            variant="outlined"
+            readonly
+            bg-color="grey-lighten-2"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -529,10 +544,10 @@ export default defineComponent({
         <v-col cols="4"> Erstellt von</v-col>
         <v-col cols="8">
           <v-text-field
-              v-model="computedGroup.createdBy"
-              variant="outlined"
-              readonly
-              bg-color="grey-lighten-2"
+            v-model="computedGroup.createdBy"
+            variant="outlined"
+            readonly
+            bg-color="grey-lighten-2"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -540,10 +555,10 @@ export default defineComponent({
         <v-col cols="4">Zuletzt editiert am</v-col>
         <v-col cols="8">
           <v-text-field
-              v-model="computedGroup.lastUpdatedOn"
-              variant="outlined"
-              readonly
-              bg-color="grey-lighten-2"
+            v-model="computedGroup.lastUpdatedOn"
+            variant="outlined"
+            readonly
+            bg-color="grey-lighten-2"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -551,62 +566,60 @@ export default defineComponent({
         <v-col cols="4">Zuletzt editiert von</v-col>
         <v-col cols="8">
           <v-text-field
-              v-model="computedGroup.lastUpdatedBy"
-              variant="outlined"
-              readonly
-              bg-color="grey-lighten-2"
+            v-model="computedGroup.lastUpdatedBy"
+            variant="outlined"
+            readonly
+            bg-color="grey-lighten-2"
           ></v-text-field>
         </v-col>
       </v-row>
 
-      <v-row>
-        Berechtigte IP-Adress-Bereiche
-      </v-row>
+      <v-row> Berechtigte IP-Adress-Bereiche </v-row>
       <v-row>
         <v-col cols="5">
           <v-textarea
-              label="IP-Adressen, Direkteingabe"
-              v-model="formState.ipAddressesText"
-              :error-messages="errorIpAddresses"
-              v-bind="attrWithLogin"
-              variant="outlined"
+            label="IP-Adressen, Direkteingabe"
+            v-model="formState.ipAddressesText"
+            :error-messages="errorIpAddresses"
+            v-bind="attrWithLogin"
+            variant="outlined"
           ></v-textarea>
           <v-checkbox
-              label="CSV Eingabe besitzt KEINEN Header"
-              v-model="hasNoCSVHeader"
+            label="CSV Eingabe besitzt KEINEN Header"
+            v-model="hasNoCSVHeader"
           ></v-checkbox>
         </v-col>
         <v-col cols="1"> oder</v-col>
         <v-col cols="5">
           <v-file-input
-              chips
-              bg-color="white"
-              accept=".csv"
-              label="CSV-Datei Import"
-              v-model="formState.ipAddressesFile"
-              :error-messages="errorIpAddresses"
-              v-bind="attrWithLogin"
-              variant="outlined"
+            chips
+            bg-color="white"
+            accept=".csv"
+            label="CSV-Datei Import"
+            v-model="formState.ipAddressesFile"
+            :error-messages="errorIpAddresses"
+            v-bind="attrWithLogin"
+            variant="outlined"
           ></v-file-input>
           Hinweis: Es kann nur eine CSV-Datei pro Gruppe hinterlegt werden.
         </v-col>
         <v-col cols="1" class="pl-4">
           <v-btn
-              density="compact"
-              icon="mdi-help"
-              href="https://zbwintern/wiki/display/stba/03_IP-Gruppen"
-              target="_blank"
+            density="compact"
+            icon="mdi-help"
+            href="https://zbwintern/wiki/display/stba/03_IP-Gruppen"
+            target="_blank"
           ></v-btn>
         </v-col>
       </v-row>
       <v-row>
         <v-col>
           <v-textarea
-              label="Beschreibung"
-              v-model="formState.description"
-              variant="outlined"
-              bg-color="white"
-              v-bind="attrWithLogin"
+            label="Beschreibung"
+            v-model="formState.description"
+            variant="outlined"
+            bg-color="white"
+            v-bind="attrWithLogin"
           ></v-textarea>
         </v-col>
       </v-row>
@@ -616,29 +629,24 @@ export default defineComponent({
           <v-expansion-panel-text>
             <v-container fluid>
               <v-data-table
-                  :headers="headersVersion"
-                  :items="oldVersions"
-                  loading-text="Daten werden geladen... Bitte warten."
+                :headers="headersVersion"
+                :items="oldVersions"
+                loading-text="Daten werden geladen... Bitte warten."
               >
-
                 <template v-slot:item.version="{ item }">
-                  {{ item.version + 1}}
+                  {{ item.version + 1 }}
                 </template>
                 <template v-slot:item.viewVersion="{ item }">
-                  <v-btn
-                      variant="text"
-                      icon="mdi-eye"
-                  >
-                    <v-icon small @click="showVersion(item.version)">mdi-eye
+                  <v-btn variant="text" icon="mdi-eye">
+                    <v-icon small @click="showVersion(item.version)"
+                      >mdi-eye
                     </v-icon>
                   </v-btn>
                 </template>
                 <template v-slot:item.downloadVersion="{ item }">
-                  <v-btn
-                      variant="text"
-                      icon="mdi-download-outline"
-                  >
-                    <v-icon small @click="downloadVersion(item.version)">mdi-download-outline
+                  <v-btn variant="text" icon="mdi-download-outline">
+                    <v-icon small @click="downloadVersion(item.version)"
+                      >mdi-download-outline
                     </v-icon>
                   </v-btn>
                 </template>
@@ -651,16 +659,16 @@ export default defineComponent({
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn
-          @click="save"
-          color="blue darken-1"
-          :disabled="!userStore.isLoggedIn"
+        @click="save"
+        color="blue darken-1"
+        :disabled="!userStore.isLoggedIn"
       >
         Speichern
       </v-btn>
       <v-btn
-          :disabled="!userStore.isLoggedIn"
-          v-if="!isNew"
-          @click="initiateDeleteDialog"
+        :disabled="!userStore.isLoggedIn"
+        v-if="!isNew"
+        @click="initiateDeleteDialog"
       >
         <v-icon>mdi-delete</v-icon>
       </v-btn>

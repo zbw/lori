@@ -1,5 +1,15 @@
 <script lang="ts">
-import {computed, defineComponent, onMounted, PropType, reactive, Ref, ref, useAttrs, watch} from "vue";
+import {
+  computed,
+  defineComponent,
+  onMounted,
+  PropType,
+  reactive,
+  Ref,
+  ref,
+  useAttrs,
+  watch,
+} from "vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import bookmarkApi from "@/api/bookmarkApi";
 import { useSearchStore } from "@/stores/search";
@@ -8,18 +18,19 @@ import searchquerybuilder from "@/utils/searchquerybuilder";
 import error from "@/utils/error";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
-import {BookmarkIdCreated, BookmarkRest} from "@/generated-sources/openapi";
-import {useUserStore} from "@/stores/user";
+import { BookmarkIdCreated, BookmarkRest } from "@/generated-sources/openapi";
+import { useUserStore } from "@/stores/user";
 import metadata_utils from "@/utils/metadata_utils";
 import url from "@/utils/url";
-import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
+import {
+  RouteLocationNormalizedLoaded,
+  Router,
+  useRoute,
+  useRouter,
+} from "vue-router";
 
 export default defineComponent({
-  emits: [
-    "addBookmarkSuccessful",
-    "closeEditDialog",
-    "editBookmarkSuccessful",
-  ],
+  emits: ["addBookmarkSuccessful", "closeEditDialog", "editBookmarkSuccessful"],
   computed: {
     navigator_utils() {
       return navigator_utils;
@@ -51,8 +62,8 @@ export default defineComponent({
     /**
      * Router + Route
      */
-    const router: Router = useRouter()
-    const route: RouteLocationNormalizedLoaded = useRoute()
+    const router: Router = useRouter();
+    const route: RouteLocationNormalizedLoaded = useRoute();
     /**
      * Constants:
      */
@@ -100,11 +111,9 @@ export default defineComponent({
       formState.name = "";
       description.value = "";
       filterQuery.value = "";
-      url.removeQueryParameters(
-          route,
-          router,
-          [url.QUERY_PARAMETER_BOOKMARK_ID],
-      );
+      url.removeQueryParameters(route, router, [
+        url.QUERY_PARAMETER_BOOKMARK_ID,
+      ]);
       emit("closeEditDialog");
     };
 
@@ -112,16 +121,16 @@ export default defineComponent({
      * Changes:
      */
     const formWasChanged = computed(() => {
-      return (props.isNew && (formState.name != "" ||
-              description.value != "")) ||
-          (!props.isNew && (
-              formState.name != props.bookmark?.bookmarkName ||
-              description.value != props.bookmark?.description
-          ))
+      return (
+        (props.isNew && (formState.name != "" || description.value != "")) ||
+        (!props.isNew &&
+          (formState.name != props.bookmark?.bookmarkName ||
+            description.value != props.bookmark?.description))
+      );
     });
     const unsavedChangesDialog = ref(false);
     const checkForChangesAndClose = () => {
-      if(formWasChanged.value){
+      if (formWasChanged.value) {
         unsavedChangesDialog.value = true;
       } else {
         close();
@@ -138,7 +147,7 @@ export default defineComponent({
           return;
         }
         updateInProgress.value = true;
-        if(props.isNew){
+        if (props.isNew) {
           create();
         } else {
           update();
@@ -149,42 +158,42 @@ export default defineComponent({
     const create = () => {
       let bookmarkName = formState.name;
       bookmarkApi
-          .addRawBookmark(
-              bookmarkName,
-              description.value,
-              searchStore.lastSearchTerm,
-              searchquerybuilder.buildPublicationYearFilter(searchStore),
-              searchquerybuilder.buildPublicationTypeFilter(searchStore),
-              searchquerybuilder.buildAccessStateFilter(searchStore),
-              searchquerybuilder.buildStartDateAtFilter(searchStore),
-              searchquerybuilder.buildEndDateAtFilter(searchStore),
-              searchquerybuilder.buildFormalRuleFilter(searchStore),
-              searchquerybuilder.buildValidOnFilter(searchStore),
-              searchquerybuilder.buildPaketSigelIdFilter(searchStore),
-              searchquerybuilder.buildZDBIdFilter(searchStore),
-              searchquerybuilder.buildNoRightInformation(searchStore),
-              searchquerybuilder.buildSeriesFilter(searchStore),
-              searchquerybuilder.buildTemplateNameFilter(searchStore),
-              searchquerybuilder.buildLicenceUrlFilter(searchStore),
-              searchquerybuilder.buildManualRightFilter(searchStore),
-              searchquerybuilder.buildAccessOnDateFilter(searchStore),
-              searchquerybuilder.buildDeletionsFilter(searchStore),
-              searchquerybuilder.buildStorageDateFilter(searchStore),
-          )
-          .then((r: BookmarkIdCreated) => {
-            emit("addBookmarkSuccessful", r.bookmarkId, bookmarkName);
-            close();
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              updateInProgress.value = false;
-              saveAlertError.value = true;
-              saveAlertErrorMessage.value = errMsg;
-            });
-          }).finally(() =>{
+        .addRawBookmark(
+          bookmarkName,
+          description.value,
+          searchStore.lastSearchTerm,
+          searchquerybuilder.buildPublicationYearFilter(searchStore),
+          searchquerybuilder.buildPublicationTypeFilter(searchStore),
+          searchquerybuilder.buildAccessStateFilter(searchStore),
+          searchquerybuilder.buildStartDateAtFilter(searchStore),
+          searchquerybuilder.buildEndDateAtFilter(searchStore),
+          searchquerybuilder.buildFormalRuleFilter(searchStore),
+          searchquerybuilder.buildValidOnFilter(searchStore),
+          searchquerybuilder.buildPaketSigelIdFilter(searchStore),
+          searchquerybuilder.buildZDBIdFilter(searchStore),
+          searchquerybuilder.buildNoRightInformation(searchStore),
+          searchquerybuilder.buildSeriesFilter(searchStore),
+          searchquerybuilder.buildTemplateNameFilter(searchStore),
+          searchquerybuilder.buildLicenceUrlFilter(searchStore),
+          searchquerybuilder.buildManualRightFilter(searchStore),
+          searchquerybuilder.buildAccessOnDateFilter(searchStore),
+          searchquerybuilder.buildDeletionsFilter(searchStore),
+          searchquerybuilder.buildStorageDateFilter(searchStore),
+        )
+        .then((r: BookmarkIdCreated) => {
+          emit("addBookmarkSuccessful", r.bookmarkId, bookmarkName);
+          close();
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
             updateInProgress.value = false;
-          }
-      );
+            saveAlertError.value = true;
+            saveAlertErrorMessage.value = errMsg;
+          });
+        })
+        .finally(() => {
+          updateInProgress.value = false;
+        });
     };
 
     const update = () => {
@@ -192,22 +201,22 @@ export default defineComponent({
       tmpBookmark.value.bookmarkName = formState.name;
       tmpBookmark.value.description = description.value;
       bookmarkApi
-          .updateBookmark(tmpBookmark.value)
-          .then(() => {
-            emit("editBookmarkSuccessful", { ...tmpBookmark.value });
-            close();
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              updateInProgress.value = false;
-              saveAlertError.value = true;
-              saveAlertErrorMessage.value = errMsg;
-            });
-          }).finally(() => {
-        updateInProgress.value = false;
-      });
+        .updateBookmark(tmpBookmark.value)
+        .then(() => {
+          emit("editBookmarkSuccessful", { ...tmpBookmark.value });
+          close();
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            updateInProgress.value = false;
+            saveAlertError.value = true;
+            saveAlertErrorMessage.value = errMsg;
+          });
+        })
+        .finally(() => {
+          updateInProgress.value = false;
+        });
     };
-
 
     const cardTitle = computed(() => {
       let mode: string;
@@ -222,60 +231,68 @@ export default defineComponent({
     });
 
     const reinitializeBookmark = () => {
-      if(!props.isNew){
-        description.value = props.bookmark?.description ?? '';
-        formState.name = props.bookmark?.bookmarkName ?? '';
-        filterQuery.value = props.bookmark?.filtersAsQuery ?? '';
-        createdBy.value = props.bookmark?.createdBy ?? '';
+      if (!props.isNew) {
+        description.value = props.bookmark?.description ?? "";
+        formState.name = props.bookmark?.bookmarkName ?? "";
+        filterQuery.value = props.bookmark?.filtersAsQuery ?? "";
+        createdBy.value = props.bookmark?.createdBy ?? "";
         createdOn.value = props.bookmark?.createdOn;
       }
     };
 
     const resetAllValues = () => {
-      description.value = '';
-      if (props.searchTerm == undefined || props.searchTerm == ''){
-        formState.name = '';
+      description.value = "";
+      if (props.searchTerm == undefined || props.searchTerm == "") {
+        formState.name = "";
       } else {
-        formState.name  = metadata_utils.extractValues(props.searchTerm);
+        formState.name = metadata_utils.extractValues(props.searchTerm);
       }
     };
 
     const loginStatusProps = computed(() => {
       if (!userStore.isLoggedIn) {
         return {
-          "readonly": true,
+          readonly: true,
           "bg-color": "grey-lighten-2",
         };
       } else {
         return {
           "bg-color": "white",
-          "clearable" : true
+          clearable: true,
         };
       }
     });
 
     const attrs = useAttrs();
-    const attrWithLogin = computed(() => ({ ...attrs, ...loginStatusProps.value }));
+    const attrWithLogin = computed(() => ({
+      ...attrs,
+      ...loginStatusProps.value,
+    }));
 
     watch(
-        () => props.reinitCounter,
-        () => {
-          if(props.isNew){
-            resetAllValues();
-          } else {
-            reinitializeBookmark();
-          }
-        },
-        { immediate: true }
+      () => props.reinitCounter,
+      () => {
+        if (props.isNew) {
+          resetAllValues();
+        } else {
+          reinitializeBookmark();
+        }
+      },
+      { immediate: true },
     );
 
     onMounted(() => {
       url.addQueryParameters(route, router, {
-        [url.QUERY_PARAMETER_BOOKMARK_ID]: props.bookmark?.bookmarkId
+        [url.QUERY_PARAMETER_BOOKMARK_ID]: props.bookmark?.bookmarkId,
       });
-      if(props.isNew){
-        filterQuery.value = (props.searchTerm != undefined && props.searchTerm != '') && (props.filters != '' && props.filters != undefined)
-            ? '(' + props.searchTerm + ') & (' + props.filters + ')' : (props.searchTerm ?? '')  + (props.filters ?? '');
+      if (props.isNew) {
+        filterQuery.value =
+          props.searchTerm != undefined &&
+          props.searchTerm != "" &&
+          props.filters != "" &&
+          props.filters != undefined
+            ? "(" + props.searchTerm + ") & (" + props.filters + ")"
+            : (props.searchTerm ?? "") + (props.filters ?? "");
       }
     });
 
@@ -308,23 +325,20 @@ export default defineComponent({
 
 <template>
   <v-snackbar
-      contained
-      multi-line
-      location="top"
-      timer="true"
-      timeout="5000"
-      v-model="saveAlertError"
-      color="error"
+    contained
+    multi-line
+    location="top"
+    timer="true"
+    timeout="5000"
+    v-model="saveAlertError"
+    color="error"
   >
     {{ saveAlertErrorMessage }}
   </v-snackbar>
   <v-card position="relative">
     <v-toolbar>
       <v-spacer></v-spacer>
-      <v-btn
-          icon="mdi-close"
-          @click="checkForChangesAndClose"
-      ></v-btn>
+      <v-btn icon="mdi-close" @click="checkForChangesAndClose"></v-btn>
     </v-toolbar>
     <v-dialog v-model="unsavedChangesDialog" max-width="500px">
       <v-card>
@@ -334,16 +348,10 @@ export default defineComponent({
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-              @click="closeUnsavedChangesDialog"
-              color="blue darken-1"
-          >Abbrechen
+          <v-btn @click="closeUnsavedChangesDialog" color="blue darken-1"
+            >Abbrechen
           </v-btn>
-          <v-btn
-              color="error"
-              @click="close">
-            Änderungen verwerfen
-          </v-btn>
+          <v-btn color="error" @click="close"> Änderungen verwerfen </v-btn>
           <v-spacer></v-spacer>
         </v-card-actions>
       </v-card>
@@ -354,12 +362,12 @@ export default defineComponent({
         <v-col cols="4"> Name</v-col>
         <v-col cols="8">
           <v-text-field
-              v-model="formState.name"
-              :error-messages="errorName"
-              hint="Name des Bookmarks"
-              maxlength="256"
-              variant="outlined"
-              v-bind="attrWithLogin"
+            v-model="formState.name"
+            :error-messages="errorName"
+            hint="Name des Bookmarks"
+            maxlength="256"
+            variant="outlined"
+            v-bind="attrWithLogin"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -367,25 +375,24 @@ export default defineComponent({
         <v-col cols="4"> Beschreibung</v-col>
         <v-col cols="8">
           <v-textarea
-              hint="Beschreibung des Bookmarks"
-              v-model="description"
-              variant="outlined"
-              v-bind="attrWithLogin"
+            hint="Beschreibung des Bookmarks"
+            v-model="description"
+            variant="outlined"
+            v-bind="attrWithLogin"
           ></v-textarea>
         </v-col>
       </v-row>
       <v-row>
         <v-col cols="4"> Suchstring</v-col>
         <v-col cols="6">
-          <v-text-field
-              v-model="filterQuery"
-              readonly
-          ></v-text-field>
+          <v-text-field v-model="filterQuery" readonly></v-text-field>
         </v-col>
         <v-col cols="2">
           <v-btn
-              @click="navigator_utils.copyToClipboard(bookmark?.filtersAsQuery??'')"
-              icon="mdi-content-copy"
+            @click="
+              navigator_utils.copyToClipboard(bookmark?.filtersAsQuery ?? '')
+            "
+            icon="mdi-content-copy"
           >
           </v-btn>
         </v-col>
@@ -394,10 +401,10 @@ export default defineComponent({
         <v-col cols="4"> Erstellt am</v-col>
         <v-col cols="8">
           <v-text-field
-              v-model="createdOn"
-              variant="outlined"
-              readonly
-              bg-color="grey-lighten-2"
+            v-model="createdOn"
+            variant="outlined"
+            readonly
+            bg-color="grey-lighten-2"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -405,20 +412,20 @@ export default defineComponent({
         <v-col cols="4"> Erstellt von</v-col>
         <v-col cols="8">
           <v-text-field
-              v-model="createdBy"
-              variant="outlined"
-              readonly
-              bg-color="grey-lighten-2"
+            v-model="createdBy"
+            variant="outlined"
+            readonly
+            bg-color="grey-lighten-2"
           ></v-text-field>
         </v-col>
       </v-row>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn
-            :disabled="updateInProgress"
-            color="blue darken-1"
-            text="Speichern"
-            @click="save"
+          :disabled="updateInProgress"
+          color="blue darken-1"
+          text="Speichern"
+          @click="save"
         ></v-btn>
       </v-card-actions>
     </v-container>

@@ -1,14 +1,13 @@
 <script lang="ts">
-
-import {computed, defineComponent, PropType, ref} from "vue";
-import {BookmarkRest, RightRest} from "@/generated-sources/openapi";
+import { computed, defineComponent, PropType, ref } from "vue";
+import { BookmarkRest, RightRest } from "@/generated-sources/openapi";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 
 /**
  * Wrapper for the rights coordinating copy mechanism and business logic between different instances.
  */
 export default defineComponent({
-  components: {RightsEditDialog},
+  components: { RightsEditDialog },
   inheritAttrs: false,
   props: {
     rightId: {
@@ -102,35 +101,38 @@ export default defineComponent({
     };
 
     const onAddSuccessful = (newRight: RightRest) => {
-      emit('addSuccessful', newRight);
+      emit("addSuccessful", newRight);
     };
 
     const onAddTemplateSuccessful = (newRight: RightRest) => {
-      emit('addTemplateSuccessful', newRight);
+      emit("addTemplateSuccessful", newRight);
     };
 
     const onDeleteSuccessful = (index: number, rightId: string | undefined) => {
-      emit('deleteSuccessful', index, rightId);
-    }
+      emit("deleteSuccessful", index, rightId);
+    };
 
     const onDeleteTemplateSuccessful = (templateName: string) => {
-      emit('deleteTemplateSuccessful', templateName);
-    }
+      emit("deleteTemplateSuccessful", templateName);
+    };
 
     const onEditRightClosed = () => {
-      emit('editRightClosed');
-    }
+      emit("editRightClosed");
+    };
 
-    const onHasFormChanged = (existingRightHasChanges: boolean, rightId: string) => {
-      emit('hasFormChanged', existingRightHasChanges, rightId);
-    }
+    const onHasFormChanged = (
+      existingRightHasChanges: boolean,
+      rightId: string,
+    ) => {
+      emit("hasFormChanged", existingRightHasChanges, rightId);
+    };
 
     const onUpdateSuccessful = (newRight: RightRest, index: number) => {
-      emit('updateSuccessful', newRight, index);
+      emit("updateSuccessful", newRight, index);
     };
 
     const onUpdateTemplateSuccessful = (templateName: string) => {
-      emit('updateTemplateSuccessful', templateName);
+      emit("updateTemplateSuccessful", templateName);
     };
 
     return {
@@ -154,7 +156,7 @@ export default defineComponent({
       onHasFormChanged,
       onUpdateSuccessful,
       onUpdateTemplateSuccessful,
-    }
+    };
   },
 });
 </script>
@@ -168,13 +170,13 @@ export default defineComponent({
 /* make wrapper inherit the overlay's max-height (v-overlay__content has inline max-height) */
 .rights-wrapper {
   width: 100%;
-  max-height: inherit;      /* ← inherit the parent's max-height: 850px */
+  max-height: inherit; /* ← inherit the parent's max-height: 850px */
   box-sizing: border-box;
 }
 
 .rights-scroll {
-  max-height: inherit;      /* inherits same value */
-  overflow: auto;           /* this will show scrollbars when content is taller */
+  max-height: inherit; /* inherits same value */
+  overflow: auto; /* this will show scrollbars when content is taller */
   box-sizing: border-box;
 }
 
@@ -196,66 +198,57 @@ export default defineComponent({
   <div class="rights-wrapper" v-bind="attrs">
     <!-- default view -->
     <!-- v-show is important because otherwise the overlays would be rendered twice -->
-    <div
-        v-show="!exceptionInstance && !copyInstance"
-        class="rights-scroll"
-    >
+    <div v-show="!exceptionInstance && !copyInstance" class="rights-scroll">
       <RightsEditDialog
-          v-bind="attrs"
-          :rightId=rightId
-          :index=index
-          :isNewRight=isNewRight
-          :isNewTemplate=isNewTemplate
-          :isExceptionTemplate=isExceptionTemplate
-          :handle=handle
-          :reinitCounter=reinitCounter
-          :initialBookmark=initialBookmark
-          :initialRight=initialRight
-          :isTabEntry=isTabEntry
-          :licenceUrl=licenceUrl
-          :exceptionTemplate=exceptionValue
-          :copySuccessfulTo="copiedSuccessfulTo"
-          v-on:createException="displayExceptionView"
-          v-on:addSuccessful="onAddSuccessful"
-          v-on:addTemplateSuccessful="onAddTemplateSuccessful"
-          v-on:editRightClosed="onEditRightClosed"
-          v-on:hasFormChanged="onHasFormChanged"
-          v-on:updateSuccessful="onUpdateSuccessful"
-          v-on:updateTemplateSuccessful="onUpdateTemplateSuccessful"
-          v-on:copyRight="displayCopyView"
+        v-bind="attrs"
+        :rightId="rightId"
+        :index="index"
+        :isNewRight="isNewRight"
+        :isNewTemplate="isNewTemplate"
+        :isExceptionTemplate="isExceptionTemplate"
+        :handle="handle"
+        :reinitCounter="reinitCounter"
+        :initialBookmark="initialBookmark"
+        :initialRight="initialRight"
+        :isTabEntry="isTabEntry"
+        :licenceUrl="licenceUrl"
+        :exceptionTemplate="exceptionValue"
+        :copySuccessfulTo="copiedSuccessfulTo"
+        v-on:createException="displayExceptionView"
+        v-on:addSuccessful="onAddSuccessful"
+        v-on:addTemplateSuccessful="onAddTemplateSuccessful"
+        v-on:editRightClosed="onEditRightClosed"
+        v-on:hasFormChanged="onHasFormChanged"
+        v-on:updateSuccessful="onUpdateSuccessful"
+        v-on:updateTemplateSuccessful="onUpdateTemplateSuccessful"
+        v-on:copyRight="displayCopyView"
       ></RightsEditDialog>
     </div>
 
     <!-- Overlay copy -->
-    <div
-        v-if="copyInstance"
-        class="rights-scroll"
-    >
+    <div v-if="copyInstance" class="rights-scroll">
       <RightsEditDialog
-          v-bind="attrs"
-          :isNewRight="true"
-          :isNewTemplate="false"
-          :initialRight="rightToCopy"
-          :index="0"
-          :isCopy="true"
-          v-on:editRightClosed="closeCopyView"
-          v-on:copySuccessful="copySuccessful"
+        v-bind="attrs"
+        :isNewRight="true"
+        :isNewTemplate="false"
+        :initialRight="rightToCopy"
+        :index="0"
+        :isCopy="true"
+        v-on:editRightClosed="closeCopyView"
+        v-on:copySuccessful="copySuccessful"
       ></RightsEditDialog>
     </div>
 
     <!-- Overlay exception -->
-    <div
-        v-if="exceptionInstance"
-        class="rights-scroll"
-    >
+    <div v-if="exceptionInstance" class="rights-scroll">
       <RightsEditDialog
-          v-bind="attrs"
-          :isNewRight=false
-          :isNewTemplate=true
-          :index=0
-          :isExceptionTemplate=true
-          v-on:editRightClosed="closeExceptionView"
-          v-on:addTemplateSuccessful="addNewExceptionToOriginal"
+        v-bind="attrs"
+        :isNewRight="false"
+        :isNewTemplate="true"
+        :index="0"
+        :isExceptionTemplate="true"
+        v-on:editRightClosed="closeExceptionView"
+        v-on:addTemplateSuccessful="addNewExceptionToOriginal"
       ></RightsEditDialog>
     </div>
   </div>

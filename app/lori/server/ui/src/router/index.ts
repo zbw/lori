@@ -12,8 +12,8 @@ const routes: Array<RouteRecordRaw> = [
     redirect: "/ui",
   },
   {
-    path: '/rest',
-    name: 'RestApi',
+    path: "/rest",
+    name: "RestApi",
     component: RestApi,
   },
 ];

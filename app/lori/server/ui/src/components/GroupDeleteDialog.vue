@@ -28,20 +28,20 @@ export default defineComponent({
     const deleteGroup = () => {
       deleteInProgress.value = true;
       api
-          .deleteGroup(props.groupId)
-          .then(() => {
-            emit("deleteGroupSuccessful");
-            close();
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              deleteAlertErrorMessage.value = errMsg;
-              deleteAlertError.value = true;
-            });
-          })
-          .finally(() => {
-            deleteInProgress.value = false;
+        .deleteGroup(props.groupId)
+        .then(() => {
+          emit("deleteGroupSuccessful");
+          close();
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            deleteAlertErrorMessage.value = errMsg;
+            deleteAlertError.value = true;
           });
+        })
+        .finally(() => {
+          deleteInProgress.value = false;
+        });
     };
 
     return {
@@ -59,13 +59,13 @@ export default defineComponent({
 <template>
   <v-card>
     <v-snackbar
-        contained
-        multi-line
-        location="top"
-        timer="true"
-        timeout="3000"
-        v-model="deleteAlertError"
-        color="error"
+      contained
+      multi-line
+      location="top"
+      timer="true"
+      timeout="3000"
+      v-model="deleteAlertError"
+      color="error"
     >
       {{ deleteAlertErrorMessage }}
     </v-snackbar>
@@ -74,7 +74,7 @@ export default defineComponent({
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn :disabled="deleteInProgress" color="blue darken-1" @click="close"
-      >Abbrechen
+        >Abbrechen
       </v-btn>
       <v-btn :loading="deleteInProgress" color="error" @click="deleteGroup">
         Löschen

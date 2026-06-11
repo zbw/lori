@@ -6,7 +6,8 @@ import {
   AccessStateRest,
   BookmarkRest,
   GroupRest,
-  ItemEntry, ResponseError,
+  ItemEntry,
+  ResponseError,
   RightIdCreated,
   RightRest,
   RightRestBasisAccessStateEnum,
@@ -19,7 +20,8 @@ import {
   PropType,
   reactive,
   Ref,
-  ref, useAttrs,
+  ref,
+  useAttrs,
   watch,
 } from "vue";
 
@@ -35,13 +37,18 @@ import date_utils from "@/utils/date_utils";
 import container_utils from "@/utils/container_utils";
 import Dashboard from "@/components/Dashboard.vue";
 import rightApi from "@/api/rightApi";
-import {useUserStore} from "@/stores/user";
+import { useUserStore } from "@/stores/user";
 import navigator_utils from "@/utils/navigator_utils";
 import ExceptionConnect from "@/components/ExceptionConnect.vue";
 import RelationshipConnect from "@/components/RelationshipConnect.vue";
-import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
+import {
+  RouteLocationNormalizedLoaded,
+  Router,
+  useRoute,
+  useRouter,
+} from "vue-router";
 import BookmarkSave from "@/components/BookmarkSave.vue";
-import {ReadonlyDataTableHeader} from "@/types/vuetify";
+import { ReadonlyDataTableHeader } from "@/types/vuetify";
 
 export default defineComponent({
   computed: {
@@ -111,7 +118,7 @@ export default defineComponent({
     copySuccessfulTo: {
       type: String,
       default: false,
-    }
+    },
   },
 
   // Components
@@ -141,8 +148,7 @@ export default defineComponent({
     updateTemplateSuccessful: (templateName: string) => true,
   },
 
-  setup(props, {emit}) {
-
+  setup(props, { emit }) {
     /**
      * Stores:
      */
@@ -182,8 +188,8 @@ export default defineComponent({
 
     const startDateFormatted = computed(() => {
       if (
-          date_utils.isEmptyObject(formState.startDate) ||
-          formState.startDate == undefined
+        date_utils.isEmptyObject(formState.startDate) ||
+        formState.startDate == undefined
       ) {
         return "";
       } else {
@@ -193,8 +199,8 @@ export default defineComponent({
 
     const endDateFormatted = computed(() => {
       if (
-          date_utils.isEmptyObject(formState.endDate) ||
-          formState.endDate == undefined
+        date_utils.isEmptyObject(formState.endDate) ||
+        formState.endDate == undefined
       ) {
         return "";
       } else {
@@ -204,17 +210,21 @@ export default defineComponent({
 
     const firstAppliedForHandleFormatted = computed(() => {
       if (
-          date_utils.isEmptyObject(lastSavedRight.value.firstAppliedForHandleOn) ||
-          lastSavedRight.value.firstAppliedForHandleOn == undefined
+        date_utils.isEmptyObject(
+          lastSavedRight.value.firstAppliedForHandleOn,
+        ) ||
+        lastSavedRight.value.firstAppliedForHandleOn == undefined
       ) {
         return "";
       } else {
-        return date_utils.dateToIso8601(lastSavedRight.value.firstAppliedForHandleOn);
+        return date_utils.dateToIso8601(
+          lastSavedRight.value.firstAppliedForHandleOn,
+        );
       }
     });
 
-    const updateEndDate = (newValue : string | undefined) => {
-      if (newValue == '' || newValue == undefined){
+    const updateEndDate = (newValue: string | undefined) => {
+      if (newValue == "" || newValue == undefined) {
         formState.endDate = undefined;
       }
     };
@@ -229,49 +239,71 @@ export default defineComponent({
     }) as (date: unknown) => boolean;
     // This nightmare of casting is necessary because of vuetifyes loose definition of allowed-dates
 
-    const newRightHasChanges = computed (() => {
-      return isNew.value &&
-          (formState.accessState != "" ||
-              formState.basisStorage != "" ||
-              formState.basisAccessState != ""  ||
-              formState.hasLegalRisk != "" ||
-              !(formState.startDate == undefined || Object.keys(formState.startDate).length === 0) ||
-              !(formState.endDate == undefined || Object.keys(formState.endDate).length === 0) ||
-              (isTemplate.value && (
-                      formState.templateName != "" ||
-                      formState.templateDescription != "" ||
-                      formState.selectedBookmarks.length != 0 ||
-                      formState.exceptionTemplates.length != 0 ||
-                      formState.predecessors.length != 0 ||
-                      formState.successors.length != 0
-                  )
-              ))
+    const newRightHasChanges = computed(() => {
+      return (
+        isNew.value &&
+        (formState.accessState != "" ||
+          formState.basisStorage != "" ||
+          formState.basisAccessState != "" ||
+          formState.hasLegalRisk != "" ||
+          !(
+            formState.startDate == undefined ||
+            Object.keys(formState.startDate).length === 0
+          ) ||
+          !(
+            formState.endDate == undefined ||
+            Object.keys(formState.endDate).length === 0
+          ) ||
+          (isTemplate.value &&
+            (formState.templateName != "" ||
+              formState.templateDescription != "" ||
+              formState.selectedBookmarks.length != 0 ||
+              formState.exceptionTemplates.length != 0 ||
+              formState.predecessors.length != 0 ||
+              formState.successors.length != 0)))
+      );
     });
-    const existingRightHasChanges = computed (() => {
-      return (JSON.stringify(tmpRight.value) != JSON.stringify(lastSavedRight.value) ||
-          ((tmpRight.value.groups != undefined) && (formState.selectedGroups != tmpRight.value.groups)) ||
-          formState.accessState != accessStateToString(lastSavedRight.value.accessState) ||
-          formState.basisStorage != basisStorageToString(lastSavedRight.value.basisStorage) ||
-          formState.hasLegalRisk != hasLegalRiskToString(lastSavedRight.value.hasLegalRisk) ||
-          formState.basisAccessState != basisAccessStateToString(lastSavedRight.value.basisAccessState)  ||
-          formState.startDate != lastSavedRight.value.startDate ||
-          formState.endDate != lastSavedRight.value.endDate ||
-          (isTemplate.value && (
-                  formState.templateName != lastSavedRight.value.templateName ||
-                  formState.templateDescription != (lastSavedRight.value.templateDescription == undefined ? "" : lastSavedRight.value.templateDescription) ||
-                  JSON.stringify(formState.selectedBookmarks) != JSON.stringify(lastSavedBookmarkItems.value) ||
-                  JSON.stringify(formState.exceptionTemplates) != JSON.stringify(lastSavedExceptionTemplateItems.value) ||
-                  JSON.stringify(formState.predecessors) != JSON.stringify(lastSavedPredecessors.value) ||
-                  JSON.stringify(formState.successors) != JSON.stringify(lastSavedSuccessors.value)
-              )
-          )
-      )
+    const existingRightHasChanges = computed(() => {
+      return (
+        JSON.stringify(tmpRight.value) !=
+          JSON.stringify(lastSavedRight.value) ||
+        (tmpRight.value.groups != undefined &&
+          formState.selectedGroups != tmpRight.value.groups) ||
+        formState.accessState !=
+          accessStateToString(lastSavedRight.value.accessState) ||
+        formState.basisStorage !=
+          basisStorageToString(lastSavedRight.value.basisStorage) ||
+        formState.hasLegalRisk !=
+          hasLegalRiskToString(lastSavedRight.value.hasLegalRisk) ||
+        formState.basisAccessState !=
+          basisAccessStateToString(lastSavedRight.value.basisAccessState) ||
+        formState.startDate != lastSavedRight.value.startDate ||
+        formState.endDate != lastSavedRight.value.endDate ||
+        (isTemplate.value &&
+          (formState.templateName != lastSavedRight.value.templateName ||
+            formState.templateDescription !=
+              (lastSavedRight.value.templateDescription == undefined
+                ? ""
+                : lastSavedRight.value.templateDescription) ||
+            JSON.stringify(formState.selectedBookmarks) !=
+              JSON.stringify(lastSavedBookmarkItems.value) ||
+            JSON.stringify(formState.exceptionTemplates) !=
+              JSON.stringify(lastSavedExceptionTemplateItems.value) ||
+            JSON.stringify(formState.predecessors) !=
+              JSON.stringify(lastSavedPredecessors.value) ||
+            JSON.stringify(formState.successors) !=
+              JSON.stringify(lastSavedSuccessors.value)))
+      );
     });
     const formWasChanged = computed(() => {
-      if (isNew.value){
-        return newRightHasChanges.value
+      if (isNew.value) {
+        return newRightHasChanges.value;
       } else {
-        emit("hasFormChanged", existingRightHasChanges.value, props.rightId??'0')
+        emit(
+          "hasFormChanged",
+          existingRightHasChanges.value,
+          props.rightId ?? "0",
+        );
         return existingRightHasChanges.value;
       }
     });
@@ -293,7 +325,7 @@ export default defineComponent({
     };
 
     const groupCheck = (value: Array<GroupRest>, siblings: FormState) => {
-      return !(siblings.accessState == 'Restricted' && value.length == 0);
+      return !(siblings.accessState == "Restricted" && value.length == 0);
     };
 
     const bookmarksCheck = (value: Array<RightRest>) => {
@@ -305,7 +337,7 @@ export default defineComponent({
     };
 
     const copyToHandleIdCheck = (value: string) => {
-      return !(props.isCopy && value.length == 0)
+      return !(props.isCopy && value.length == 0);
     };
 
     const rules = {
@@ -326,8 +358,8 @@ export default defineComponent({
     const errorAccessState = computed(() => {
       const errors: Array<string> = [];
       if (
-          v$.value.accessState.required.$invalid &&
-          v$.value.accessState.$dirty
+        v$.value.accessState.required.$invalid &&
+        v$.value.accessState.$dirty
       ) {
         errors.push("Eintrag wird benötigt");
       }
@@ -349,20 +381,19 @@ export default defineComponent({
     });
     const errorTemplateName = computed(() => {
       const errors: Array<string> = [];
-      if (
-          v$.value.templateName.$invalid &&
-          v$.value.templateName.$dirty
-      ) {
+      if (v$.value.templateName.$invalid && v$.value.templateName.$dirty) {
         errors.push("Es wird ein Template-Name benötigt.");
       }
       return errors;
     });
-    const errorIPGroup = computed(() =>{
+    const errorIPGroup = computed(() => {
       const errors: Array<string> = [];
       if (v$.value.selectedGroups.$invalid) {
-        errors.push("Bei Auswahl des Access-Status 'Restricted' ist die Angabe einer" +
+        errors.push(
+          "Bei Auswahl des Access-Status 'Restricted' ist die Angabe einer" +
             " IP-Gruppe, auf die der Zugriff beschränkt werden soll, zwingend erforderlich." +
-            " Bitte eine IP-Gruppe auswählen.");
+            " Bitte eine IP-Gruppe auswählen.",
+        );
       }
       return errors;
     });
@@ -388,11 +419,7 @@ export default defineComponent({
       "ZBW-Policy (unbeantwortete Rechteanforderung)",
     ]);
 
-    const legalRiskSelect = ref([
-      "Ja",
-      "Nein",
-      "Kein Wert gewählt",
-    ]);
+    const legalRiskSelect = ref(["Ja", "Nein", "Kein Wert gewählt"]);
 
     const dialogDeleteRight = ref(false);
     const dialogDeleteTemplate = ref(false);
@@ -407,11 +434,9 @@ export default defineComponent({
     const lastSavedRight = ref({} as RightRest);
 
     const emitClosedDialog = () => {
-      url.removeQueryParameters(
-          route,
-          router,
-          [url.QUERY_PARAMETER_TEMPLATE_ID],
-      );
+      url.removeQueryParameters(route, router, [
+        url.QUERY_PARAMETER_TEMPLATE_ID,
+      ]);
       emit("editRightClosed");
     };
 
@@ -437,7 +462,7 @@ export default defineComponent({
 
     const unsavedChangesDialog = ref(false);
     const checkForChangesAndClose = () => {
-      if(formWasChanged.value){
+      if (formWasChanged.value) {
         unsavedChangesDialog.value = true;
       } else {
         cancel();
@@ -485,79 +510,79 @@ export default defineComponent({
      */
     const testHandleValidity = (handle: string, callback: () => void) => {
       api
-          .getRightsByHandle(handle)
-          .then(() => {
-            callback();
-          })
-          .catch((e) => {
-            console.log(e);
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsgIsActive.value = true;
-              errorMsg.value = "Der Handle '" +  handle + "' existiert nicht";
-            });
-          })
+        .getRightsByHandle(handle)
+        .then(() => {
+          callback();
+        })
+        .catch((e) => {
+          console.log(e);
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsgIsActive.value = true;
+            errorMsg.value = "Der Handle '" + handle + "' existiert nicht";
+          });
+        });
     };
 
     const createRight = () => {
       tmpRight.value.rightId = "unset";
       api
-          .addRight(tmpRight.value)
-          .then((r) => {
-            const handle = props.isCopy ? formState.copyToHandleId : props.handle;
-            api
-                .addItemEntry(
-                    {
-                      handle: handle,
-                      rightId: r.rightId,
-                    } as ItemEntry,
-                    true,
-                )
-                .then(() => {
-                  tmpRight.value.rightId = r.rightId;
-                  emit("addSuccessful", tmpRight.value);
-                  if(props.isCopy){
-                    emit("copySuccessful", formState.copyToHandleId);
-                  }
-                  close();
-                })
-                .catch((e) => {
-                  updateInProgress.value = false;
-                  error.errorHandling(e, (errMsg: string) => {
-                    errorMsgIsActive.value = true;
-                    errorMsg.value = "Speichern war nicht erfolgreich: " +  errMsg;
-                    updateConfirmDialog.value = false;
-                  });
-                });
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsgIsActive.value = true;
-              errorMsg.value = "Speichern war nicht erfolgreich: " +  errMsg;
-              updateConfirmDialog.value = false;
+        .addRight(tmpRight.value)
+        .then((r) => {
+          const handle = props.isCopy ? formState.copyToHandleId : props.handle;
+          api
+            .addItemEntry(
+              {
+                handle: handle,
+                rightId: r.rightId,
+              } as ItemEntry,
+              true,
+            )
+            .then(() => {
+              tmpRight.value.rightId = r.rightId;
+              emit("addSuccessful", tmpRight.value);
+              if (props.isCopy) {
+                emit("copySuccessful", formState.copyToHandleId);
+              }
+              close();
+            })
+            .catch((e) => {
+              updateInProgress.value = false;
+              error.errorHandling(e, (errMsg: string) => {
+                errorMsgIsActive.value = true;
+                errorMsg.value = "Speichern war nicht erfolgreich: " + errMsg;
+                updateConfirmDialog.value = false;
+              });
             });
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsgIsActive.value = true;
+            errorMsg.value = "Speichern war nicht erfolgreich: " + errMsg;
+            updateConfirmDialog.value = false;
           });
+        });
     };
 
     const updateRight = () => {
       api
-          .updateRight(tmpRight.value)
-          .then(() => {
-            emit("updateSuccessful", tmpRight.value, props.index);
-            successMsg.value =
-                "Rechteinformation " +
-                tmpRight.value.rightId +
-                " erfolgreich geupdated";
-            successMsgIsActive.value = true;
-            reinitializeRight();
-          })
-          .catch((e) => {
-            updateInProgress.value = false;
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsgIsActive.value = true;
-              errorMsg.value = "Update war nicht erfolgreich: " +  errMsg;
-              updateConfirmDialog.value = false;
-            });
+        .updateRight(tmpRight.value)
+        .then(() => {
+          emit("updateSuccessful", tmpRight.value, props.index);
+          successMsg.value =
+            "Rechteinformation " +
+            tmpRight.value.rightId +
+            " erfolgreich geupdated";
+          successMsgIsActive.value = true;
+          reinitializeRight();
+        })
+        .catch((e) => {
+          updateInProgress.value = false;
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsgIsActive.value = true;
+            errorMsg.value = "Update war nicht erfolgreich: " + errMsg;
+            updateConfirmDialog.value = false;
           });
+        });
     };
 
     /**
@@ -566,111 +591,118 @@ export default defineComponent({
     const createTemplate = () => {
       tmpRight.value.rightId = "unset";
       templateApi
-          .addTemplate(tmpRight.value)
-          .then((r: RightIdCreated) => {
-            const exceptionId: string | undefined = formState.exceptionTemplates[0]?.rightId
-            if(exceptionId == undefined){
-              updateBookmarks(r.rightId, () => {
-                tmpRight.value.rightId = r.rightId;
-                emit("addTemplateSuccessful", tmpRight.value);
-                close();
-              });
-              return;
-            }
-            addExceptionsToTemplate(r.rightId, exceptionId, () => {
-              updateBookmarks(r.rightId, () => {
-                tmpRight.value.rightId = r.rightId;
-                emit("addTemplateSuccessful", tmpRight.value);
-                close();
-              });
+        .addTemplate(tmpRight.value)
+        .then((r: RightIdCreated) => {
+          const exceptionId: string | undefined =
+            formState.exceptionTemplates[0]?.rightId;
+          if (exceptionId == undefined) {
+            updateBookmarks(r.rightId, () => {
+              tmpRight.value.rightId = r.rightId;
+              emit("addTemplateSuccessful", tmpRight.value);
+              close();
             });
-          })
-          .catch((e) => {
-            updateInProgress.value = false;
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
+            return;
+          }
+          addExceptionsToTemplate(r.rightId, exceptionId, () => {
+            updateBookmarks(r.rightId, () => {
+              tmpRight.value.rightId = r.rightId;
+              emit("addTemplateSuccessful", tmpRight.value);
+              close();
             });
           });
+        })
+        .catch((e) => {
+          updateInProgress.value = false;
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
+          });
+        });
     };
 
     const updateTemplate = () => {
       templateApi
-          .updateTemplate(tmpRight.value)
-          .then(() => {
-            if (tmpRight.value.rightId == undefined) {
-              errorMsg.value =
-                  "No RightId found when updating. This should NOT happen.";
-              errorMsgIsActive.value = true;
-              return;
-            }
-            updateBookmarks(tmpRight.value.rightId, () => {
-              removeExceptionsToTemplate(
-                  tmpRight.value.rightId!!,
-                  () => {
-                    addExceptionsToTemplate(
-                        tmpRight.value.rightId!!,
-                        formState.exceptionTemplates[0]?.rightId,
-                        () => {
-                          successMsg.value =
-                              "Template " +
-                              tmpRight.value.templateName +
-                              " erfolgreich geupdated";
-                          successMsgIsActive.value = true;
-                          emit("updateTemplateSuccessful", formState.templateName);
-                          reinitializeRight();
-                        }
-                    );
-                  });
-            });
-          })
-          .catch((e) => {
-            updateInProgress.value = false;
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
+        .updateTemplate(tmpRight.value)
+        .then(() => {
+          if (tmpRight.value.rightId == undefined) {
+            errorMsg.value =
+              "No RightId found when updating. This should NOT happen.";
+            errorMsgIsActive.value = true;
+            return;
+          }
+          updateBookmarks(tmpRight.value.rightId, () => {
+            removeExceptionsToTemplate(tmpRight.value.rightId!!, () => {
+              addExceptionsToTemplate(
+                tmpRight.value.rightId!!,
+                formState.exceptionTemplates[0]?.rightId,
+                () => {
+                  successMsg.value =
+                    "Template " +
+                    tmpRight.value.templateName +
+                    " erfolgreich geupdated";
+                  successMsgIsActive.value = true;
+                  emit("updateTemplateSuccessful", formState.templateName);
+                  reinitializeRight();
+                },
+              );
             });
           });
+        })
+        .catch((e) => {
+          updateInProgress.value = false;
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
+          });
+        });
     };
 
     /**
      * Add exceptions.
      */
     const addExceptionsToTemplate = (
-        rightId: string,
-        exceptionId: string | undefined,
-        callback: () => void,
+      rightId: string,
+      exceptionId: string | undefined,
+      callback: () => void,
     ) => {
-      if (exceptionId == undefined){
+      if (exceptionId == undefined) {
         callback();
         return;
       }
       templateApi
-          .addExceptionToTemplate(rightId, exceptionId)
-          .then(() => {
-            callback();
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
+        .addExceptionToTemplate(rightId, exceptionId)
+        .then(() => {
+          callback();
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
+        });
     };
 
     /**
      * Remove exceptions.
      */
     const removeExceptionsToTemplate = (
-        rightId: string,
-        callback: () => void,
+      rightId: string,
+      callback: () => void,
     ) => {
       // Figure out which exceptions were deleted
-      const deletedTemplates: RightRest[] = lastSavedExceptionTemplateItems.value.filter((exception: RightRest) => !formState.exceptionTemplates.includes(exception));
-      const results: Promise<void>[] = deletedTemplates.map(async function (template: RightRest) {
+      const deletedTemplates: RightRest[] =
+        lastSavedExceptionTemplateItems.value.filter(
+          (exception: RightRest) =>
+            !formState.exceptionTemplates.includes(exception),
+        );
+      const results: Promise<void>[] = deletedTemplates.map(async function (
+        template: RightRest,
+      ) {
         try {
-          return await templateApi
-              .removeExceptionToTemplate(rightId, template.rightId!!);
+          return await templateApi.removeExceptionToTemplate(
+            rightId,
+            template.rightId!!,
+          );
         } catch (e) {
           error.errorHandling(e, (errMsg: string) => {
             errorMsg.value = errMsg;
@@ -678,8 +710,8 @@ export default defineComponent({
           });
         }
       });
-      Promise.allSettled(results).then(settledResults => {
-        const hasError = settledResults.some(r => r.status === 'rejected');
+      Promise.allSettled(results).then((settledResults) => {
+        const hasError = settledResults.some((r) => r.status === "rejected");
         if (hasError) {
           // Handle errors
           return;
@@ -692,41 +724,47 @@ export default defineComponent({
     /**
      * Watch exceptions controlled by the wrapper:
      */
-    watch(() => props.exceptionTemplate, (currentValue) => {
-      console.log("watcher exceptionTemplate");
-      if(currentValue == undefined){
-        formState.exceptionTemplates = [];
-      } else {
-        formState.exceptionTemplates =
+    watch(
+      () => props.exceptionTemplate,
+      (currentValue) => {
+        console.log("watcher exceptionTemplate");
+        if (currentValue == undefined) {
+          formState.exceptionTemplates = [];
+        } else {
+          formState.exceptionTemplates =
             formState.exceptionTemplates.concat(currentValue);
-      }
-      renderSuccessorKey.value += 1;
-    });
+        }
+        renderSuccessorKey.value += 1;
+      },
+    );
 
     /**
      * Refresh bookmarks.
      */
-    const updateBookmarks = (rightId: string | undefined, callback: () => void) => {
-      if (rightId == undefined){
+    const updateBookmarks = (
+      rightId: string | undefined,
+      callback: () => void,
+    ) => {
+      if (rightId == undefined) {
         return;
       }
       templateApi
-          .addBookmarksByRightId(
-              rightId,
-              formState.selectedBookmarks
-                  .map((elem) => elem.bookmarkId)
-                  .filter((elem): elem is number => !!elem),
-              true,
-          )
-          .then(() => {
-            callback();
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
+        .addBookmarksByRightId(
+          rightId,
+          formState.selectedBookmarks
+            .map((elem) => elem.bookmarkId)
+            .filter((elem): elem is number => !!elem),
+          true,
+        )
+        .then(() => {
+          callback();
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
+        });
     };
     const editDialogActivated = ref(false);
     const editBookmark = ref({} as BookmarkRest);
@@ -737,34 +775,34 @@ export default defineComponent({
     };
 
     const closeBookmarkEditDialog = () => {
-      if(!props.isNewTemplate) {
+      if (!props.isNewTemplate) {
         loadBookmarks();
       }
       editDialogActivated.value = false;
     };
 
     const errorSources = ref([] as string[]);
-    const hasMissingBookmark = computed(() =>{
+    const hasMissingBookmark = computed(() => {
       return v$.value.selectedBookmarks.$error;
     });
     const getErrorSources: () => string[] = () => {
       let errors = [];
-      if (v$.value.templateName.$error){
+      if (v$.value.templateName.$error) {
         errors.push("Template-Name (Pflichtelement)");
       }
-      if (v$.value.selectedBookmarks.$error){
+      if (v$.value.selectedBookmarks.$error) {
         errors.push("Verknüpfte Suche (Pflichtelement)");
       }
-      if (v$.value.accessState.$error){
+      if (v$.value.accessState.$error) {
         errors.push("Access-Status (Pflichtelement)");
       }
-      if (v$.value.startDate.$error){
+      if (v$.value.startDate.$error) {
         errors.push("Start-Datum (Pflichtelement)");
       }
-      if (v$.value.endDate.$error){
+      if (v$.value.endDate.$error) {
         errors.push("End-Datum (darf nicht vor Start-Datum liegen)");
       }
-      if (v$.value.selectedGroups.$error){
+      if (v$.value.selectedGroups.$error) {
         errors.push("IP-Gruppe (Pflichtelement)");
       }
       return errors;
@@ -775,11 +813,14 @@ export default defineComponent({
       if (!isTemplate.value) {
         formState.templateName = "foo";
       }
-      tmpRight.value.groupIds = formState.selectedGroups.map((g: GroupRest) => g.groupId);
+      tmpRight.value.groupIds = formState.selectedGroups.map(
+        (g: GroupRest) => g.groupId,
+      );
       tmpRight.value.groups = formState.selectedGroups;
       const isValid = await v$.value.$validate();
       if (!isValid) {
-        errorMsg.value = "Fehler beim Speichern des Templates wegen unvollständiger oder fehlerhafter Angaben:";
+        errorMsg.value =
+          "Fehler beim Speichern des Templates wegen unvollständiger oder fehlerhafter Angaben:";
         errorSources.value = getErrorSources();
         errorMsgIsActive.value = true;
         updateInProgress.value = false;
@@ -787,17 +828,19 @@ export default defineComponent({
       }
 
       tmpRight.value.accessState = stringToAccessState(formState.accessState);
-      if(tmpRight.value.accessState != AccessStateRest.Restricted){
+      if (tmpRight.value.accessState != AccessStateRest.Restricted) {
         // Ensure groups are only passed when access state is restricted.
         tmpRight.value.groups = [];
         tmpRight.value.groupIds = [];
       }
       tmpRight.value.basisStorage = stringToBasisStorage(
-          formState.basisStorage,
+        formState.basisStorage,
       );
-      tmpRight.value.hasLegalRisk = stringToHasLegalRisk(formState.hasLegalRisk);
+      tmpRight.value.hasLegalRisk = stringToHasLegalRisk(
+        formState.hasLegalRisk,
+      );
       tmpRight.value.basisAccessState = stringToBasisAccessState(
-          formState.basisAccessState,
+        formState.basisAccessState,
       );
       updateInProgress.value = true;
       if (formState.startDate == undefined) {
@@ -807,54 +850,48 @@ export default defineComponent({
 
       if (formState.endDate != undefined) {
         tmpRight.value.endDate = new Date();
-        tmpRight.value.endDate.setUTCFullYear(
-            formState.endDate.getFullYear()
-        );
+        tmpRight.value.endDate.setUTCFullYear(formState.endDate.getFullYear());
 
-        tmpRight.value.endDate.setUTCMonth(
-            formState.endDate.getMonth()
-        );
-        tmpRight.value.endDate.setUTCDate(
-            formState.endDate.getDate()
-        );
+        tmpRight.value.endDate.setUTCMonth(formState.endDate.getMonth());
+        tmpRight.value.endDate.setUTCDate(formState.endDate.getDate());
       } else {
         tmpRight.value.endDate = undefined;
       }
       tmpRight.value.startDate = new Date();
 
       tmpRight.value.startDate.setUTCFullYear(
-          formState.startDate.getFullYear()
+        formState.startDate.getFullYear(),
       );
-      tmpRight.value.startDate.setUTCMonth(
-          formState.startDate.getMonth()
-      );
-      tmpRight.value.startDate.setUTCDate(
-          formState.startDate.getDate()
-      );
+      tmpRight.value.startDate.setUTCMonth(formState.startDate.getMonth());
+      tmpRight.value.startDate.setUTCDate(formState.startDate.getDate());
 
-      if (isTemplate.value){
+      if (isTemplate.value) {
         tmpRight.value.templateName = formState.templateName;
         tmpRight.value.templateDescription = formState.templateDescription;
-        tmpRight.value.predecessorId =
-            formState.predecessors
-                .map((e) => e.rightId)
-                .filter((id): id is string => id != null)
-                .join(",")
-        tmpRight.value.successorId =
-            formState.successors
-                .map((e) => e.rightId)
-                .filter((id): id is string => id != null)
-                .join(",")
+        tmpRight.value.predecessorId = formState.predecessors
+          .map((e) => e.rightId)
+          .filter((id): id is string => id != null)
+          .join(",");
+        tmpRight.value.successorId = formState.successors
+          .map((e) => e.rightId)
+          .filter((id): id is string => id != null)
+          .join(",");
         tmpRight.value.isTemplate = true;
-        if (tmpRight.value.successorId != undefined && tmpRight.value.successorId != "" && (tmpRight.value.successorId == tmpRight.value.predecessorId)){
-          errorMsg.value = "Fehler beim Speichern des Templates. Vorgänger und Nachfolger Template sind gleich!";
+        if (
+          tmpRight.value.successorId != undefined &&
+          tmpRight.value.successorId != "" &&
+          tmpRight.value.successorId == tmpRight.value.predecessorId
+        ) {
+          errorMsg.value =
+            "Fehler beim Speichern des Templates. Vorgänger und Nachfolger Template sind gleich!";
           errorSources.value = getErrorSources();
           errorMsgIsActive.value = true;
           updateInProgress.value = false;
           return;
         }
-        if(tmpRight.value.templateName.startsWith("KOPIE ")){
-          errorMsg.value = "Fehler beim Speichern des Templates. Der Template Name darf nicht mit KOPIE beginnen.";
+        if (tmpRight.value.templateName.startsWith("KOPIE ")) {
+          errorMsg.value =
+            "Fehler beim Speichern des Templates. Der Template Name darf nicht mit KOPIE beginnen.";
           errorSources.value = getErrorSources();
           errorMsgIsActive.value = true;
           updateInProgress.value = false;
@@ -868,7 +905,7 @@ export default defineComponent({
       } else if (props.isCopy) {
         testHandleValidity(formState.copyToHandleId, () => {
           createRight();
-        })
+        });
       } else if (props.isNewRight) {
         createRight();
       } else {
@@ -881,23 +918,25 @@ export default defineComponent({
      */
     const copy: () => void = () => {
       emit("copyRight", tmpRight.value);
-    }
+    };
     const errorCopyToHandleId = computed(() => {
       const errors: Array<string> = [];
-      if (
-          v$.value.copyToHandleId.$invalid &&
-          v$.value.copyToHandleId.$dirty
-      ) {
+      if (v$.value.copyToHandleId.$invalid && v$.value.copyToHandleId.$dirty) {
         errors.push("Es wird eine gültige Handle-Id benötigt.");
       }
       return errors;
     });
 
-    watch(() => props.copySuccessfulTo, () => {
-      successMsg.value =
-          "Rechteinformation wurde erfolgreich gekopiert zu Handle '" + props.copySuccessfulTo + "'.";
-      successMsgIsActive.value = true;
-    });
+    watch(
+      () => props.copySuccessfulTo,
+      () => {
+        successMsg.value =
+          "Rechteinformation wurde erfolgreich gekopiert zu Handle '" +
+          props.copySuccessfulTo +
+          "'.";
+        successMsgIsActive.value = true;
+      },
+    );
 
     const accessStateToString = (access: AccessStateRest | undefined) => {
       if (access == undefined) {
@@ -948,7 +987,7 @@ export default defineComponent({
     };
 
     const basisStorageToString = (
-        basisStorage: RightRestBasisStorageEnum | undefined,
+      basisStorage: RightRestBasisStorageEnum | undefined,
     ) => {
       if (basisStorage == undefined) {
         return "";
@@ -996,7 +1035,7 @@ export default defineComponent({
     };
 
     const basisAccessStateToString = (
-        basisAccessState: RightRestBasisAccessStateEnum | undefined,
+      basisAccessState: RightRestBasisAccessStateEnum | undefined,
     ) => {
       if (basisAccessState == undefined) {
         return "";
@@ -1048,7 +1087,7 @@ export default defineComponent({
       // The check for undefined is required here!
       if (props.rightId == undefined) {
         return "";
-      } else if (manualRightId.value != ""){
+      } else if (manualRightId.value != "") {
         return manualRightId.value;
       } else {
         return props.rightId;
@@ -1058,35 +1097,41 @@ export default defineComponent({
 
     const isNew = computed(() => props.isNewRight || props.isNewTemplate);
     const isEditable = computed(
-        () =>
-            (userStore.isLoggedIn && isNew.value) ||
-            (userStore.isLoggedIn && lastSavedRight.value != undefined && lastSavedRight.value.lastAppliedOn == undefined && isTemplate.value)
+      () =>
+        (userStore.isLoggedIn && isNew.value) ||
+        (userStore.isLoggedIn &&
+          lastSavedRight.value != undefined &&
+          lastSavedRight.value.lastAppliedOn == undefined &&
+          isTemplate.value),
     );
     const isTemplate = computed(
-        () =>
-            props.isNewTemplate ||
-            (lastSavedRight.value != undefined && lastSavedRight.value.isTemplate),
+      () =>
+        props.isNewTemplate ||
+        (lastSavedRight.value != undefined && lastSavedRight.value.isTemplate),
     );
     const isExistingTemplate = computed(
-        () =>
-            !props.isNewTemplate &&
-            (lastSavedRight.value != undefined && lastSavedRight.value.isTemplate),
+      () =>
+        !props.isNewTemplate &&
+        lastSavedRight.value != undefined &&
+        lastSavedRight.value.isTemplate,
     );
     const isTemplateAndException = computed(
-        () => isTemplate.value && props.isExceptionTemplate,
+      () => isTemplate.value && props.isExceptionTemplate,
     );
     const isTemplateDraft = computed(
-        () => isTemplate.value && lastSavedRight.value?.lastAppliedOn == undefined,
+      () =>
+        isTemplate.value && lastSavedRight.value?.lastAppliedOn == undefined,
     );
     const exceptionsAllowed = computed(
-        () =>
-            !props.isExceptionTemplate &&
-            (props.isNewTemplate ||
-                (lastSavedRight.value != undefined && lastSavedRight.value.exceptionOfId == undefined)),
+      () =>
+        !props.isExceptionTemplate &&
+        (props.isNewTemplate ||
+          (lastSavedRight.value != undefined &&
+            lastSavedRight.value.exceptionOfId == undefined)),
     );
 
     const mode = computed(() => {
-      if(props.isCopy){
+      if (props.isCopy) {
         return "kopieren";
       } else if (isNew.value) {
         return "erstellen";
@@ -1100,24 +1145,27 @@ export default defineComponent({
     const cardTitle = computed(() => {
       if (isTemplate.value) {
         let description: string;
-        if (props.isExceptionTemplate && lastSavedRight.value?.lastAppliedOn == undefined){
-          description = "(Ausnahme und Entwurf)"
+        if (
+          props.isExceptionTemplate &&
+          lastSavedRight.value?.lastAppliedOn == undefined
+        ) {
+          description = "(Ausnahme und Entwurf)";
         } else if (
-            lastSavedRight.value?.exceptionOfId != undefined &&
-            lastSavedRight.value?.exceptionOfId != '' &&
-            lastSavedRight.value?.lastAppliedOn == undefined
-        ){
-          description = "(Ausnahme und Entwurf)"
+          lastSavedRight.value?.exceptionOfId != undefined &&
+          lastSavedRight.value?.exceptionOfId != "" &&
+          lastSavedRight.value?.lastAppliedOn == undefined
+        ) {
+          description = "(Ausnahme und Entwurf)";
         } else if (
-            props.isExceptionTemplate ||
-            (lastSavedRight.value?.exceptionOfId != undefined &&
-                lastSavedRight.value?.exceptionOfId != '')
-        ){
-          description = "(Ausnahme)"
+          props.isExceptionTemplate ||
+          (lastSavedRight.value?.exceptionOfId != undefined &&
+            lastSavedRight.value?.exceptionOfId != "")
+        ) {
+          description = "(Ausnahme)";
         } else if (lastSavedRight.value?.lastAppliedOn == undefined) {
-          description = "(Entwurf)"
+          description = "(Entwurf)";
         } else {
-          description = ""
+          description = "";
         }
         return "Template " + description + " " + mode.value;
       } else {
@@ -1134,7 +1182,7 @@ export default defineComponent({
         resetAllValues();
         addInitialBookmark();
       } else {
-        getRightsData(() =>{
+        getRightsData(() => {
           setGivenValues();
           loadBookmarks();
         });
@@ -1144,24 +1192,32 @@ export default defineComponent({
     const addInitialBookmark = () => {
       if (props.initialBookmark != undefined) {
         formState.selectedBookmarks = Array(props.initialBookmark);
-        formState.templateName = props.initialBookmark.bookmarkName ?? '';
+        formState.templateName = props.initialBookmark.bookmarkName ?? "";
       }
     };
 
     const setGivenValues = () => {
       tmpRight.value = Object.assign({}, lastSavedRight.value);
-      if(tmpRight.value.groups != undefined) {
+      if (tmpRight.value.groups != undefined) {
         formState.selectedGroups = tmpRight.value.groups;
       }
       formState.templateName =
-          tmpRight.value.templateName == undefined ? "" : tmpRight.value.templateName;
+        tmpRight.value.templateName == undefined
+          ? ""
+          : tmpRight.value.templateName;
       formState.templateDescription =
-          tmpRight.value.templateDescription == undefined ? "" : tmpRight.value.templateDescription;
+        tmpRight.value.templateDescription == undefined
+          ? ""
+          : tmpRight.value.templateDescription;
       formState.accessState = accessStateToString(tmpRight.value.accessState);
-      formState.basisStorage = basisStorageToString(tmpRight.value.basisStorage);
-      formState.hasLegalRisk = hasLegalRiskToString(tmpRight.value.hasLegalRisk);
+      formState.basisStorage = basisStorageToString(
+        tmpRight.value.basisStorage,
+      );
+      formState.hasLegalRisk = hasLegalRiskToString(
+        tmpRight.value.hasLegalRisk,
+      );
       formState.basisAccessState = basisAccessStateToString(
-          tmpRight.value.basisAccessState,
+        tmpRight.value.basisAccessState,
       );
       formState.startDate = tmpRight.value.startDate;
       if (tmpRight.value.endDate !== undefined) {
@@ -1190,38 +1246,35 @@ export default defineComponent({
     };
 
     const getRightsData = (callback: () => void) => {
-      if (props.rightId == undefined){
+      if (props.rightId == undefined) {
         return;
       }
       rightApi
-          .getRightById(
-              computedRightId.value,
-              props.handle,
-          )
-          .then((r: RightRest) => {
-            lastSavedRight.value = r;
-            callback();
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
+        .getRightById(computedRightId.value, props.handle)
+        .then((r: RightRest) => {
+          lastSavedRight.value = r;
+          callback();
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
+        });
     };
 
     const reinitializeRight = () => {
       updateInProgress.value = false;
       getGroupList();
       if (!isNew.value) {
-        getRightsData(() =>{
+        getRightsData(() => {
           setGivenValues();
           if (isTemplate.value) {
             loadBookmarks();
             loadExceptions();
             loadPredecessor();
             loadSuccessor();
-            if(!props.isTabEntry) {
+            if (!props.isTabEntry) {
               url.addQueryParameters(route, router, {
                 [url.QUERY_PARAMETER_TEMPLATE_ID]: props.rightId,
               });
@@ -1231,7 +1284,7 @@ export default defineComponent({
       } else {
         resetAllValues();
         addInitialBookmark();
-        if(props.initialRight != undefined){
+        if (props.initialRight != undefined) {
           lastSavedRight.value = Object.assign({}, props.initialRight);
           setGivenValues();
         }
@@ -1292,7 +1345,7 @@ export default defineComponent({
 
     const executeBookmarkNewTab = (bookmarkId: number) => {
       const hrefURL = url.createExecuteBookmarkHref(bookmarkId);
-      window.open(hrefURL, '_blank');
+      window.open(hrefURL, "_blank");
     };
 
     // Template Exceptions
@@ -1344,7 +1397,7 @@ export default defineComponent({
 
     const addNewException = (excTemplate: RightRest) => {
       formState.exceptionTemplates =
-          formState.exceptionTemplates.concat(excTemplate);
+        formState.exceptionTemplates.concat(excTemplate);
       renderTemplateKey.value += 1;
     };
 
@@ -1355,7 +1408,11 @@ export default defineComponent({
 
     const showDialogExceptionWarning = ref(false);
     const openDialogExceptionConnect = () => {
-      showDialogExceptionWarning.value = !container_utils.haveSameKeys(lastSavedExceptionTemplateItems.value, formState.exceptionTemplates, 'rightId');
+      showDialogExceptionWarning.value = !container_utils.haveSameKeys(
+        lastSavedExceptionTemplateItems.value,
+        formState.exceptionTemplates,
+        "rightId",
+      );
       openDialogException.value += 1;
       dialogConnectException.value = true;
     };
@@ -1382,111 +1439,104 @@ export default defineComponent({
     // Load Bookmarks
     const loadBookmarks = () => {
       if (computedRightId.value == undefined) {
-        errorMsg.value =
-            "Error while loading bookmarks. Invalid Template ID.";
+        errorMsg.value = "Error while loading bookmarks. Invalid Template ID.";
         errorMsgIsActive.value = true;
       } else {
         templateApi
-            .getBookmarksByRightId(computedRightId.value)
-            .then((bookmarks: Array<BookmarkRest>) => {
-              formState.selectedBookmarks = bookmarks;
-              lastSavedBookmarkItems.value = Array.from(bookmarks);
-            })
-            .catch((e) => {
-              error.errorHandling(e, (errMsg: string) => {
-                errorMsg.value = errMsg;
-                errorMsgIsActive.value = true;
-              });
+          .getBookmarksByRightId(computedRightId.value)
+          .then((bookmarks: Array<BookmarkRest>) => {
+            formState.selectedBookmarks = bookmarks;
+            lastSavedBookmarkItems.value = Array.from(bookmarks);
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
             });
+          });
       }
     };
 
     const loadExceptions = () => {
       if (computedRightId.value == undefined) {
-        errorMsg.value =
-            "Error while loading bookmarks. Invalid Template ID.";
+        errorMsg.value = "Error while loading bookmarks. Invalid Template ID.";
         errorMsgIsActive.value = true;
       } else {
         templateApi
-            .getExceptionById(computedRightId.value)
-            .then((exception: RightRest) => {
-              formState.exceptionTemplates = [exception];
-              lastSavedExceptionTemplateItems.value = [exception];
-            })
-            .catch((e: ResponseError) => {
-              if(e.response && e.response.status == 404){
-                // This is expected.
-                lastSavedExceptionTemplateItems.value = [];
-              } else {
-                error.errorHandling(e, (errMsg: string) => {
-                  errorMsg.value = errMsg;
-                  errorMsgIsActive.value = true;
-                });
-              }
-            });
+          .getExceptionById(computedRightId.value)
+          .then((exception: RightRest) => {
+            formState.exceptionTemplates = [exception];
+            lastSavedExceptionTemplateItems.value = [exception];
+          })
+          .catch((e: ResponseError) => {
+            if (e.response && e.response.status == 404) {
+              // This is expected.
+              lastSavedExceptionTemplateItems.value = [];
+            } else {
+              error.errorHandling(e, (errMsg: string) => {
+                errorMsg.value = errMsg;
+                errorMsgIsActive.value = true;
+              });
+            }
+          });
       }
     };
 
     const loadPredecessor = () => {
       if (computedRightId.value == undefined) {
         errorMsg.value =
-            "Error while loading predecessor. Invalid Template ID.";
+          "Error while loading predecessor. Invalid Template ID.";
         errorMsgIsActive.value = true;
         return;
       }
-      if(lastSavedRight.value.predecessorId == undefined){
+      if (lastSavedRight.value.predecessorId == undefined) {
         return;
       }
       rightApi
-          .getRightById(
-              lastSavedRight.value.predecessorId,
-              undefined,
-          )
-          .then((predecessor: RightRest) => {
-            formState.predecessors = [predecessor];
-            lastSavedPredecessors.value = [predecessor];
-          })
-          .catch((e: ResponseError) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
+        .getRightById(lastSavedRight.value.predecessorId, undefined)
+        .then((predecessor: RightRest) => {
+          formState.predecessors = [predecessor];
+          lastSavedPredecessors.value = [predecessor];
+        })
+        .catch((e: ResponseError) => {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
+        });
     };
 
     const loadSuccessor = () => {
       if (computedRightId.value == undefined) {
-        errorMsg.value =
-            "Error while loading successor. Invalid Template ID.";
+        errorMsg.value = "Error while loading successor. Invalid Template ID.";
         errorMsgIsActive.value = true;
         return;
       }
-      if(lastSavedRight.value.successorId == undefined){
+      if (lastSavedRight.value.successorId == undefined) {
         return;
       }
       rightApi
-          .getRightById(
-              lastSavedRight.value.successorId,
-              undefined,
-          )
-          .then((successor: RightRest) => {
-            formState.successors = [successor];
-            lastSavedSuccessors.value = [successor];
-          })
-          .catch((e: ResponseError) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
+        .getRightById(lastSavedRight.value.successorId, undefined)
+        .then((successor: RightRest) => {
+          formState.successors = [successor];
+          lastSavedSuccessors.value = [successor];
+        })
+        .catch((e: ResponseError) => {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
+        });
     };
 
     const setSelectedBookmarks = (bookmarks: Array<BookmarkRest>) => {
       // Unionise
-      formState.selectedBookmarks = formState.selectedBookmarks.concat(bookmarks);
-      formState.selectedBookmarks = uniqWith(formState.selectedBookmarks, isEqual).sort(
-          (a, b) => (a.bookmarkId < b.bookmarkId ? -1 : 1),
-      );
+      formState.selectedBookmarks =
+        formState.selectedBookmarks.concat(bookmarks);
+      formState.selectedBookmarks = uniqWith(
+        formState.selectedBookmarks,
+        isEqual,
+      ).sort((a, b) => (a.bookmarkId < b.bookmarkId ? -1 : 1));
       renderBookmarkKey.value += 1;
     };
 
@@ -1496,8 +1546,8 @@ export default defineComponent({
     };
 
     // Router + Route
-    const router: Router = useRouter()
-    const route: RouteLocationNormalizedLoaded = useRoute()
+    const router: Router = useRouter();
+    const route: RouteLocationNormalizedLoaded = useRoute();
 
     // Groups
     const errorMsgIsActive = ref(false);
@@ -1505,16 +1555,16 @@ export default defineComponent({
     const groupItems: Ref<Array<GroupRest>> = ref([]);
     const getGroupList = () => {
       api
-          .getGroupList(0, 500)
-          .then((r: Array<GroupRest>) => {
-            groupItems.value = r;
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
+        .getGroupList(0, 500)
+        .then((r: Array<GroupRest>) => {
+          groupItems.value = r;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
+        });
     };
 
     // Predecessor
@@ -1538,16 +1588,16 @@ export default defineComponent({
     };
 
     const setRightToPredecessor = (force: boolean) => {
-      if (tmpRight.value.predecessorId == undefined){
+      if (tmpRight.value.predecessorId == undefined) {
         return;
       }
 
-      if(formWasChanged.value && !force){
+      if (formWasChanged.value && !force) {
         unsavedChangesDialogPred.value = true;
         return;
       }
 
-      if(force){
+      if (force) {
         unsavedChangesDialogPred.value = false;
       }
 
@@ -1577,14 +1627,14 @@ export default defineComponent({
     };
 
     const setRightToSuccessor = (force: boolean) => {
-      if (tmpRight.value.successorId == undefined){
+      if (tmpRight.value.successorId == undefined) {
         return;
       }
-      if(formWasChanged.value && !force){
+      if (formWasChanged.value && !force) {
         unsavedChangesDialogSucc.value = true;
         return;
       }
-      if(force){
+      if (force) {
         unsavedChangesDialogSucc.value = false;
       }
       manualRightId.value = tmpRight.value.successorId;
@@ -1593,7 +1643,7 @@ export default defineComponent({
     };
 
     const labelModelToString = (mValue: boolean | undefined) => {
-      if (mValue == true){
+      if (mValue == true) {
         return "Ja";
       } else {
         return "Nein";
@@ -1603,13 +1653,13 @@ export default defineComponent({
     const readOnlyProps = computed(() => {
       if (!isEditable.value) {
         return {
-          "readonly": true,
+          readonly: true,
           "bg-color": "grey-lighten-2",
         };
       } else {
         return {
           "bg-color": "white",
-          "clearable" : true
+          clearable: true,
         };
       }
     });
@@ -1617,39 +1667,45 @@ export default defineComponent({
     const loginStatusProps = computed(() => {
       if (!userStore.isLoggedIn) {
         return {
-          "readonly": true,
+          readonly: true,
           "bg-color": "grey-lighten-2",
         };
       } else {
         return {
           "bg-color": "white",
-          "clearable" : true,
+          clearable: true,
         };
       }
     });
     const attrs = useAttrs();
-    const attrWithROProps = computed(() => ({ ...attrs, ...readOnlyProps.value }));
-    const attrWithLogin = computed(() => ({ ...attrs, ...loginStatusProps.value }));
+    const attrWithROProps = computed(() => ({
+      ...attrs,
+      ...readOnlyProps.value,
+    }));
+    const attrWithLogin = computed(() => ({
+      ...attrs,
+      ...loginStatusProps.value,
+    }));
 
     const mergeSlotWithReadonly = (slotProps: any) => {
       return {
         ...attrs,
         ...slotProps,
-        ...readOnlyProps.value
-      }
-    }
+        ...readOnlyProps.value,
+      };
+    };
 
     const mergeSlotWithLogin = (slotProps: any) => {
       return {
         ...attrs,
         ...slotProps,
-        ...readOnlyProps.value
-      }
-    }
+        ...readOnlyProps.value,
+      };
+    };
 
     const computedLicenceUrl = computed(() => {
-      if(props.licenceUrl == undefined || props.licenceUrl == ''){
-        return 'Nicht vorhanden';
+      if (props.licenceUrl == undefined || props.licenceUrl == "") {
+        return "Nicht vorhanden";
       } else {
         return props.licenceUrl;
       }
@@ -1773,7 +1829,7 @@ export default defineComponent({
 });
 </script>
 
-<style >
+<style>
 /* Do not remove! This is needed for scrolling inside expansion panels. */
 .v-expansion-panel-text__wrapper {
   max-height: calc(700px - 64px - (4 * 48px));
@@ -1795,9 +1851,9 @@ export default defineComponent({
     <v-toolbar>
       <v-spacer></v-spacer>
       <v-btn
-          v-if="!isTabEntry"
-          icon="mdi-close"
-          @click="checkForChangesAndClose"
+        v-if="!isTabEntry"
+        icon="mdi-close"
+        @click="checkForChangesAndClose"
       ></v-btn>
     </v-toolbar>
 
@@ -1809,16 +1865,10 @@ export default defineComponent({
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-              @click="closeUnsavedChangesDialog"
-              color="blue darken-1"
-          >Abbrechen
+          <v-btn @click="closeUnsavedChangesDialog" color="blue darken-1"
+            >Abbrechen
           </v-btn>
-          <v-btn
-              color="error"
-              @click="cancel">
-            Änderungen verwerfen
-          </v-btn>
+          <v-btn color="error" @click="cancel"> Änderungen verwerfen </v-btn>
           <v-spacer></v-spacer>
         </v-card-actions>
       </v-card>
@@ -1831,14 +1881,10 @@ export default defineComponent({
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-              @click="closeUnsavedChangesDialog"
-              color="blue darken-1"
-          >Abbrechen
+          <v-btn @click="closeUnsavedChangesDialog" color="blue darken-1"
+            >Abbrechen
           </v-btn>
-          <v-btn
-              color="error"
-              @click="setRightToSuccessor(true)">
+          <v-btn color="error" @click="setRightToSuccessor(true)">
             Änderungen verwerfen
           </v-btn>
           <v-spacer></v-spacer>
@@ -1853,14 +1899,10 @@ export default defineComponent({
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-              @click="closeUnsavedChangesDialog"
-              color="blue darken-1"
-          >Abbrechen
+          <v-btn @click="closeUnsavedChangesDialog" color="blue darken-1"
+            >Abbrechen
           </v-btn>
-          <v-btn
-              color="error"
-              @click="setRightToPredecessor(true)">
+          <v-btn color="error" @click="setRightToPredecessor(true)">
             Änderungen verwerfen
           </v-btn>
           <v-spacer></v-spacer>
@@ -1868,15 +1910,15 @@ export default defineComponent({
       </v-card>
     </v-dialog>
     <v-dialog
-        v-model="editDialogActivated"
-        :retain-focus="false"
-        max-width="1000px"
-        persistent
+      v-model="editDialogActivated"
+      :retain-focus="false"
+      max-width="1000px"
+      persistent
     >
       <BookmarkSave
-          :isNew="false"
-          :bookmark="editBookmark"
-          v-on:closeEditDialog="closeBookmarkEditDialog"
+        :isNew="false"
+        :bookmark="editBookmark"
+        v-on:closeEditDialog="closeBookmarkEditDialog"
       ></BookmarkSave>
     </v-dialog>
 
@@ -1887,27 +1929,23 @@ export default defineComponent({
         </v-col>
         <v-col cols="1" offset="4">
           <v-tooltip
-              v-if="isTemplateAndException"
-              location="bottom"
-              text="Ausnahme Template"
+            v-if="isTemplateAndException"
+            location="bottom"
+            text="Ausnahme Template"
           >
             <template v-slot:activator="{ props }">
-              <v-icon v-bind="props">
-                mdi-alpha-a-box-outline
-              </v-icon>
+              <v-icon v-bind="props"> mdi-alpha-a-box-outline </v-icon>
             </template>
           </v-tooltip>
         </v-col>
         <v-col cols="1">
           <v-tooltip
-              v-if="isTemplateDraft"
-              location="bottom"
-              text="Template Entwurf"
+            v-if="isTemplateDraft"
+            location="bottom"
+            text="Template Entwurf"
           >
             <template v-slot:activator="{ props }">
-              <v-icon v-bind="props">
-                mdi-alpha-e-box-outline
-              </v-icon>
+              <v-icon v-bind="props"> mdi-alpha-e-box-outline </v-icon>
             </template>
           </v-tooltip>
         </v-col>
@@ -1915,30 +1953,30 @@ export default defineComponent({
     </v-card-title>
     <v-card-actions>
       <v-snackbar
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          v-model="errorMsgIsActive"
-          color="error"
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="5000"
+        v-model="errorMsgIsActive"
+        color="error"
       >
         <div>{{ errorMsg }}</div>
         <v-list-item
-            prepend-icon="mdi-disc"
-            v-for="(item, i) in errorSources"
-            :key="i"
-            :title="`${item}`"
+          prepend-icon="mdi-disc"
+          v-for="(item, i) in errorSources"
+          :key="i"
+          :title="`${item}`"
         ></v-list-item>
       </v-snackbar>
       <v-snackbar
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          v-model="successMsgIsActive"
-          color="success"
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="5000"
+        v-model="successMsgIsActive"
+        color="success"
       >
         <span v-html="successMsg"></span>
       </v-snackbar>
@@ -1946,47 +1984,46 @@ export default defineComponent({
       <v-tooltip location="bottom" text="Rechteinformationsdokumentation">
         <template v-slot:activator="{ props }">
           <v-btn
-              v-bind="props"
-              density="compact"
-              icon="mdi-help"
-              href="https://zbwintern/wiki/x/8wPUG"
-              target="_blank"
+            v-bind="props"
+            density="compact"
+            icon="mdi-help"
+            href="https://zbwintern/wiki/x/8wPUG"
+            target="_blank"
           ></v-btn>
         </template>
       </v-tooltip>
       <v-btn
-          v-if="isTabEntry && !isTemplate"
-          :readonly="updateInProgress"
-          color="blue darken-1"
-          :disabled="!userStore.isLoggedIn"
-          @click="copy"
-      >Kopieren
+        v-if="isTabEntry && !isTemplate"
+        :readonly="updateInProgress"
+        color="blue darken-1"
+        :disabled="!userStore.isLoggedIn"
+        @click="copy"
+        >Kopieren
       </v-btn>
       <v-btn
-          v-if="isTabEntry || isCopy"
-          :readonly="updateInProgress"
-          color="blue darken-1"
-          @click="save"
-          :disabled="!userStore.isLoggedIn"
-      >Speichern
+        v-if="isTabEntry || isCopy"
+        :readonly="updateInProgress"
+        color="blue darken-1"
+        @click="save"
+        :disabled="!userStore.isLoggedIn"
+        >Speichern
       </v-btn>
 
-      <v-tooltip
-          location="bottom"
-      >
+      <v-tooltip location="bottom">
         <template v-slot:activator="{ props }">
           <div v-bind="props" class="d-inline-block">
             <v-btn
-                :disabled="!isEditable || !userStore.isLoggedIn"
-                @click="initiateDeleteDialog"
-                class="mr-9"
+              :disabled="!isEditable || !userStore.isLoggedIn"
+              @click="initiateDeleteDialog"
+              class="mr-9"
             >
               <v-icon>mdi-delete</v-icon>
             </v-btn>
           </div>
         </template>
         <span v-if="!isEditable && isTemplateAndException">
-          Ausnahme kann nicht gelöscht werden, weil das Template bereits angewendet wurde
+          Ausnahme kann nicht gelöscht werden, weil das Template bereits
+          angewendet wurde
         </span>
         <span v-else-if="!isEditable && isTemplate">
           Template kann nicht gelöscht werden, da es bereits angewendet wurde
@@ -1998,56 +2035,58 @@ export default defineComponent({
       </v-tooltip>
 
       <v-dialog
-          v-model="dialogDeleteRight"
-          :retain-focus="false"
-          max-width="500px"
+        v-model="dialogDeleteRight"
+        :retain-focus="false"
+        max-width="500px"
       >
         <RightsDeleteDialog
-            :index="index"
-            :is-template="isTemplate"
-            :right-id="computedRightId"
-            v-on:deleteDialogClosed="deleteDialogClosed"
-            v-on:deleteSuccessful="deleteSuccessful"
+          :index="index"
+          :is-template="isTemplate"
+          :right-id="computedRightId"
+          v-on:deleteDialogClosed="deleteDialogClosed"
+          v-on:deleteSuccessful="deleteSuccessful"
         ></RightsDeleteDialog>
       </v-dialog>
 
       <v-dialog
-          v-model="dialogDeleteTemplate"
-          :retain-focus="false"
-          max-width="500px"
+        v-model="dialogDeleteTemplate"
+        :retain-focus="false"
+        max-width="500px"
       >
         <RightsDeleteDialog
-            :index="index"
-            :is-template="isTemplate"
-            :right-id="computedRightId"
-            v-on:deleteDialogClosed="deleteDialogClosed"
-            v-on:templateDeleteSuccessful="deleteSuccessful"
+          :index="index"
+          :is-template="isTemplate"
+          :right-id="computedRightId"
+          v-on:deleteDialogClosed="deleteDialogClosed"
+          v-on:templateDeleteSuccessful="deleteSuccessful"
         ></RightsDeleteDialog>
       </v-dialog>
     </v-card-actions>
     <v-row>
       <v-col cols="8" class="ml-5">
         <v-btn
-            v-if="tmpRight.predecessorId != undefined && !isTabEntry"
-            icon="mdi-arrow-left-bold-box-outline"
-            @click="setRightToPredecessor(false)"
+          v-if="tmpRight.predecessorId != undefined && !isTabEntry"
+          icon="mdi-arrow-left-bold-box-outline"
+          @click="setRightToPredecessor(false)"
         >
         </v-btn>
         <span
-            v-if="tmpRight.predecessorId != undefined && !isTabEntry"
-            class="ml-3"
-        >Vorgänger</span>
+          v-if="tmpRight.predecessorId != undefined && !isTabEntry"
+          class="ml-3"
+          >Vorgänger</span
+        >
       </v-col>
       <v-spacer></v-spacer>
       <v-col class="mr-2">
         <span
-            v-if="tmpRight.successorId != undefined && !isTabEntry"
-            class="mr-3"
-        >Nachfolger</span>
+          v-if="tmpRight.successorId != undefined && !isTabEntry"
+          class="mr-3"
+          >Nachfolger</span
+        >
         <v-btn
-            v-if="tmpRight.successorId != undefined && !isTabEntry"
-            icon="mdi-arrow-right-bold-box-outline"
-            @click="setRightToSuccessor(false)"
+          v-if="tmpRight.successorId != undefined && !isTabEntry"
+          icon="mdi-arrow-right-bold-box-outline"
+          @click="setRightToSuccessor(false)"
         >
         </v-btn>
       </v-col>
@@ -2057,14 +2096,19 @@ export default defineComponent({
         <v-col cols="1">Item-Handle</v-col>
         <v-col cols="4">
           <v-text-field
-              v-model="formState.copyToHandleId"
-              variant="outlined"
-              :error-messages="errorCopyToHandleId"
-              hint="Kopierziel"
+            v-model="formState.copyToHandleId"
+            variant="outlined"
+            :error-messages="errorCopyToHandleId"
+            hint="Kopierziel"
           ></v-text-field>
         </v-col>
       </v-row>
-      <v-expansion-panels bg-color="light-blue-lighten-5" v-model="openPanelsDefault" focusable variant="accordion">
+      <v-expansion-panels
+        bg-color="light-blue-lighten-5"
+        v-model="openPanelsDefault"
+        focusable
+        variant="accordion"
+      >
         <v-expansion-panel v-if="isTemplate" value="0">
           <v-expansion-panel-title>
             Template Informationen
@@ -2075,11 +2119,11 @@ export default defineComponent({
                 <v-col cols="4"> Template Name</v-col>
                 <v-col cols="8">
                   <v-text-field
-                      v-model="formState.templateName"
-                      :error-messages="errorTemplateName"
-                      hint="Name des Templates"
-                      variant="outlined"
-                      v-bind="attrWithLogin"
+                    v-model="formState.templateName"
+                    :error-messages="errorTemplateName"
+                    hint="Name des Templates"
+                    variant="outlined"
+                    v-bind="attrWithLogin"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -2087,16 +2131,21 @@ export default defineComponent({
                 <v-col cols="4">Beschreibung</v-col>
                 <v-col cols="8">
                   <v-textarea
-                      v-model="formState.templateDescription"
-                      hint="Beschreibung des Templates"
-                      variant="outlined"
-                      v-bind="attrWithLogin"
-                      rows="2"
+                    v-model="formState.templateDescription"
+                    hint="Beschreibung des Templates"
+                    variant="outlined"
+                    v-bind="attrWithLogin"
+                    rows="2"
                   ></v-textarea>
                 </v-col>
               </v-row>
-              <div @click="expandTemplateMetadata = !expandTemplateMetadata" class="d-flex align-center cursor-pointer">
-                <v-icon :class="{ 'rotate-180': expandTemplateMetadata }">mdi-chevron-down</v-icon>
+              <div
+                @click="expandTemplateMetadata = !expandTemplateMetadata"
+                class="d-flex align-center cursor-pointer"
+              >
+                <v-icon :class="{ 'rotate-180': expandTemplateMetadata }"
+                  >mdi-chevron-down</v-icon
+                >
                 <span class="ms-2">Template Metadaten</span>
               </div>
 
@@ -2106,11 +2155,11 @@ export default defineComponent({
                     <v-col cols="4"> Erstellt am</v-col>
                     <v-col cols="8">
                       <v-text-field
-                          v-model="tmpRight.createdOn"
-                          variant="outlined"
-                          readonly
-                          bg-color="grey-lighten-2"
-                          hint="Erstellungsdatum des Templates"
+                        v-model="tmpRight.createdOn"
+                        variant="outlined"
+                        readonly
+                        bg-color="grey-lighten-2"
+                        hint="Erstellungsdatum des Templates"
                       ></v-text-field>
                     </v-col>
                   </v-row>
@@ -2118,10 +2167,10 @@ export default defineComponent({
                     <v-col cols="4"> Erstellt von</v-col>
                     <v-col cols="8">
                       <v-text-field
-                          v-model="tmpRight.createdBy"
-                          variant="outlined"
-                          readonly
-                          bg-color="grey-lighten-2"
+                        v-model="tmpRight.createdBy"
+                        variant="outlined"
+                        readonly
+                        bg-color="grey-lighten-2"
                       ></v-text-field>
                     </v-col>
                   </v-row>
@@ -2129,10 +2178,10 @@ export default defineComponent({
                     <v-col cols="4"> Zuletzt editiert am</v-col>
                     <v-col cols="8">
                       <v-text-field
-                          v-model="tmpRight.lastUpdatedOn"
-                          variant="outlined"
-                          readonly
-                          bg-color="grey-lighten-2"
+                        v-model="tmpRight.lastUpdatedOn"
+                        variant="outlined"
+                        readonly
+                        bg-color="grey-lighten-2"
                       ></v-text-field>
                     </v-col>
                   </v-row>
@@ -2140,10 +2189,10 @@ export default defineComponent({
                     <v-col cols="4"> Zuletzt editiert von</v-col>
                     <v-col cols="8">
                       <v-text-field
-                          v-model="tmpRight.lastUpdatedBy"
-                          variant="outlined"
-                          readonly
-                          bg-color="grey-lighten-2"
+                        v-model="tmpRight.lastUpdatedBy"
+                        variant="outlined"
+                        readonly
+                        bg-color="grey-lighten-2"
                       ></v-text-field>
                     </v-col>
                   </v-row>
@@ -2151,11 +2200,11 @@ export default defineComponent({
                     <v-col cols="4"> Erstmals angewendet am</v-col>
                     <v-col cols="8">
                       <v-text-field
-                          v-model="tmpRight.firstAppliedOn"
-                          variant="outlined"
-                          readonly
-                          bg-color="grey-lighten-2"
-                          hint="Datum, wann das erste Mal das Template angewendet wurde bzw. der automatische Job"
+                        v-model="tmpRight.firstAppliedOn"
+                        variant="outlined"
+                        readonly
+                        bg-color="grey-lighten-2"
+                        hint="Datum, wann das erste Mal das Template angewendet wurde bzw. der automatische Job"
                       ></v-text-field>
                     </v-col>
                   </v-row>
@@ -2163,58 +2212,49 @@ export default defineComponent({
                     <v-col cols="4"> Zuletzt angewendet am</v-col>
                     <v-col cols="8">
                       <v-text-field
-                          v-model="tmpRight.lastAppliedOn"
-                          variant="outlined"
-                          readonly
-                          bg-color="grey-lighten-2"
-                          hint="Datum, wann das letzte Mal das Template angewendet wurde bzw. der automatische Job"
+                        v-model="tmpRight.lastAppliedOn"
+                        variant="outlined"
+                        readonly
+                        bg-color="grey-lighten-2"
+                        hint="Datum, wann das letzte Mal das Template angewendet wurde bzw. der automatische Job"
                       ></v-text-field>
                     </v-col>
                   </v-row>
                 </div>
               </v-expand-transition>
 
-
               <v-row class="mt-4">
                 <v-col cols="4">
-                  <div>
-                    Verknüpfte Suche
-                  </div>
+                  <div>Verknüpfte Suche</div>
                   <p v-if="hasMissingBookmark" class="text-error">
                     Eine verknüpfte Suche wird benötigt.
                   </p>
                 </v-col>
                 <v-col cols="8">
                   <v-data-table
-                      :key="renderBookmarkKey"
-                      :headers="bookmarkHeaders"
-                      :items="formState.selectedBookmarks"
-                      item-value="bookmarkId"
-                      loading-text="Daten werden geladen... Bitte warten."
+                    :key="renderBookmarkKey"
+                    :headers="bookmarkHeaders"
+                    :items="formState.selectedBookmarks"
+                    item-value="bookmarkId"
+                    loading-text="Daten werden geladen... Bitte warten."
                   >
                     <template #bottom></template>
                     <template v-slot:item.actions="{ item }">
-                      <v-tooltip
-                          location="bottom"
-                      >
+                      <v-tooltip location="bottom">
                         <template v-slot:activator="{ props }">
                           <div v-bind="props" class="d-inline-block">
-                            <v-icon
-                                @click="openBookmarkEditDialog(item)"
-                            >
+                            <v-icon @click="openBookmarkEditDialog(item)">
                               mdi-eye
                             </v-icon>
                           </div>
                         </template>
                         <span>Anzeigen</span>
                       </v-tooltip>
-                      <v-tooltip
-                          location="bottom"
-                      >
+                      <v-tooltip location="bottom">
                         <template v-slot:activator="{ props }">
                           <div v-bind="props" class="d-inline-block">
                             <v-icon
-                                @click="executeBookmarkNewTab(item.bookmarkId)"
+                              @click="executeBookmarkNewTab(item.bookmarkId)"
                             >
                               mdi-play
                             </v-icon>
@@ -2223,42 +2263,45 @@ export default defineComponent({
                         <span>Ausführen</span>
                       </v-tooltip>
 
-                      <v-tooltip
-                          location="bottom"
-                      >
+                      <v-tooltip location="bottom">
                         <template v-slot:activator="{ props }">
                           <div v-bind="props" class="d-inline-block">
                             <v-icon
-                                :disabled="!isEditable || !(lastSavedRight?.lastAppliedOn == undefined)"
-                                @click="deleteBookmarkEntry(item)"
+                              :disabled="
+                                !isEditable ||
+                                !(lastSavedRight?.lastAppliedOn == undefined)
+                              "
+                              @click="deleteBookmarkEntry(item)"
                             >
                               mdi-delete
                             </v-icon>
                           </div>
                         </template>
-                        <span v-if="lastSavedRight?.lastAppliedOn != undefined"
-                        >
-                          Verknüpfte Suche kann nicht gelöscht werden, weil das Template bereits angewendet wurde.
+                        <span v-if="lastSavedRight?.lastAppliedOn != undefined">
+                          Verknüpfte Suche kann nicht gelöscht werden, weil das
+                          Template bereits angewendet wurde.
                         </span>
                         <span v-else>Löschen</span>
                       </v-tooltip>
                     </template>
                   </v-data-table>
                   <v-btn
-                      color="blue darken-1"
-                      @click="selectBookmark"
-                      :disabled="!isEditable || formState.selectedBookmarks.length > 0"
-                  >Gespeicherte Suche verknüpfen
+                    color="blue darken-1"
+                    @click="selectBookmark"
+                    :disabled="
+                      !isEditable || formState.selectedBookmarks.length > 0
+                    "
+                    >Gespeicherte Suche verknüpfen
                   </v-btn>
                   <v-dialog
-                      v-model="bookmarkDialogOn"
-                      :retain-focus="false"
-                      max-width="500px"
+                    v-model="bookmarkDialogOn"
+                    :retain-focus="false"
+                    max-width="500px"
                   >
                     <TemplateBookmark
-                        :reinit-counter="openBookmarkSearch"
-                        v-on:bookmarksSelected="setSelectedBookmarks"
-                        v-on:templateBookmarkClosed="templateBookmarkClosed"
+                      :reinit-counter="openBookmarkSearch"
+                      v-on:bookmarksSelected="setSelectedBookmarks"
+                      v-on:templateBookmarkClosed="templateBookmarkClosed"
                     ></TemplateBookmark>
                   </v-dialog>
                 </v-col>
@@ -2267,102 +2310,105 @@ export default defineComponent({
                 <v-col cols="4">Ausnahme</v-col>
                 <v-col cols="8">
                   <v-data-table
-                      :key="renderTemplateKey"
-                      :headers="exceptionTemplateHeaders"
-                      :items="formState.exceptionTemplates"
-                      item-value="rightId"
-                      loading-text="Daten werden geladen... Bitte warten."
+                    :key="renderTemplateKey"
+                    :headers="exceptionTemplateHeaders"
+                    :items="formState.exceptionTemplates"
+                    item-value="rightId"
+                    loading-text="Daten werden geladen... Bitte warten."
                   >
                     <template v-slot:item.templateName="{ item }">
                       <td>
                         <a
-                            v-bind:href="
-                              url.createTemplateHref(item.rightId)"
-                            target="_blank"
-                        > {{item.templateName}}</a>
+                          v-bind:href="url.createTemplateHref(item.rightId)"
+                          target="_blank"
+                        >
+                          {{ item.templateName }}</a
+                        >
                       </td>
                     </template>
                     <template #bottom></template>
                     <template v-slot:item.actions="{ item }">
-                      <v-tooltip
-                          location="bottom"
-                      >
+                      <v-tooltip location="bottom">
                         <template v-slot:activator="{ props }">
                           <div v-bind="props" class="d-inline-block">
                             <v-icon
-                                :disabled="!isEditable || !(lastSavedRight?.lastAppliedOn == undefined)"
-                                @click="deleteExceptionEntry(item)"
+                              :disabled="
+                                !isEditable ||
+                                !(lastSavedRight?.lastAppliedOn == undefined)
+                              "
+                              @click="deleteExceptionEntry(item)"
                             >
                               mdi-delete
                             </v-icon>
                           </div>
                         </template>
-                        <span v-if="lastSavedRight?.lastAppliedOn != undefined"
-                        >
-                          Ausnahme kann nicht gelöscht werden, weil das Template bereits angewendet wurde.
+                        <span v-if="lastSavedRight?.lastAppliedOn != undefined">
+                          Ausnahme kann nicht gelöscht werden, weil das Template
+                          bereits angewendet wurde.
                         </span>
                         <span v-else>Löschen</span>
                       </v-tooltip>
                     </template>
                   </v-data-table>
                   <v-btn
-                      color="blue darken-1"
-                      :disabled="!isEditable || formState.exceptionTemplates.length != 0"
-                      @click="openCreateExceptionDialog"
-                  >Erstelle neue Ausnahme
+                    color="blue darken-1"
+                    :disabled="
+                      !isEditable || formState.exceptionTemplates.length != 0
+                    "
+                    @click="openCreateExceptionDialog"
+                    >Erstelle neue Ausnahme
                   </v-btn>
                   <v-btn
-                      class="ma-3"
-                      color="blue darken-1"
-                      :disabled="!isEditable || formState.exceptionTemplates.length != 0"
-                      @click="openDialogExceptionConnect"
-                  >Ausnahme verknüpfen
+                    class="ma-3"
+                    color="blue darken-1"
+                    :disabled="
+                      !isEditable || formState.exceptionTemplates.length != 0
+                    "
+                    @click="openDialogExceptionConnect"
+                    >Ausnahme verknüpfen
                   </v-btn>
                   <v-dialog
-                      v-model="dialogConnectException"
-                      :retain-focus="false"
-                      max-width="500px"
+                    v-model="dialogConnectException"
+                    :retain-focus="false"
+                    max-width="500px"
                   >
                     <ExceptionConnect
-                        :reinit-counter="openDialogException"
-                        :rightId="rightId"
-                        :show-warning="showDialogExceptionWarning"
-                        v-on:exceptionSelected="connectException"
-                        v-on:exceptionConnectClosed="closeDialogExceptionConnect"
+                      :reinit-counter="openDialogException"
+                      :rightId="rightId"
+                      :show-warning="showDialogExceptionWarning"
+                      v-on:exceptionSelected="connectException"
+                      v-on:exceptionConnectClosed="closeDialogExceptionConnect"
                     ></ExceptionConnect>
                   </v-dialog>
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4">
-                  Vorgänger
-                </v-col>
+                <v-col cols="4"> Vorgänger </v-col>
                 <v-col cols="8">
                   <v-data-table
-                      :key="renderPredecessorKey"
-                      :headers="exceptionTemplateHeaders"
-                      :items="formState.predecessors"
-                      item-value="rightId"
-                      loading-text="Daten werden geladen... Bitte warten."
+                    :key="renderPredecessorKey"
+                    :headers="exceptionTemplateHeaders"
+                    :items="formState.predecessors"
+                    item-value="rightId"
+                    loading-text="Daten werden geladen... Bitte warten."
                   >
                     <template v-slot:item.templateName="{ item }">
                       <td>
                         <a
-                            v-bind:href="
-                              url.createTemplateHref(item.rightId)"
-                            target="_blank"
-                        > {{item.templateName}}</a>
+                          v-bind:href="url.createTemplateHref(item.rightId)"
+                          target="_blank"
+                        >
+                          {{ item.templateName }}</a
+                        >
                       </td>
                     </template>
                     <template v-slot:item.actions="{ item }">
-                      <v-tooltip
-                          location="bottom"
-                      >
+                      <v-tooltip location="bottom">
                         <template v-slot:activator="{ props }">
                           <div v-bind="props" class="d-inline-block">
                             <v-icon
-                                :disabled="!userStore.isLoggedIn"
-                                @click="deletePredecessorEntry(item)"
+                              :disabled="!userStore.isLoggedIn"
+                              @click="deletePredecessorEntry(item)"
                             >
                               mdi-delete
                             </v-icon>
@@ -2374,57 +2420,57 @@ export default defineComponent({
                     <template #bottom></template>
                   </v-data-table>
                   <v-btn
-                      color="blue darken-1"
-                      :disabled="!userStore.isLoggedIn || formState.predecessors.length != 0"
-                      @click="openDialogPredecessor"
-                  >Vorgänger verknüpfen
+                    color="blue darken-1"
+                    :disabled="
+                      !userStore.isLoggedIn ||
+                      formState.predecessors.length != 0
+                    "
+                    @click="openDialogPredecessor"
+                    >Vorgänger verknüpfen
                   </v-btn>
                   <v-dialog
-                      v-model="dialogConnectPredecessor"
-                      :retain-focus="false"
-                      max-width="500px"
+                    v-model="dialogConnectPredecessor"
+                    :retain-focus="false"
+                    max-width="500px"
                   >
                     <RelationshipConnect
-                        :reinit-counter="dialogConnectPredecessorCounter"
-                        :rightId="rightId"
-                        :relationship="'predecessor'"
-                        v-on:predecessorSelected="connectPredecessorRelationship"
-                        v-on:successorSelected="connectPredecessorRelationship"
-                        v-on:relationshipConnectClosed="closeDialogPredecessor"
+                      :reinit-counter="dialogConnectPredecessorCounter"
+                      :rightId="rightId"
+                      :relationship="'predecessor'"
+                      v-on:predecessorSelected="connectPredecessorRelationship"
+                      v-on:successorSelected="connectPredecessorRelationship"
+                      v-on:relationshipConnectClosed="closeDialogPredecessor"
                     ></RelationshipConnect>
                   </v-dialog>
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4">
-                  Nachfolger
-                </v-col>
+                <v-col cols="4"> Nachfolger </v-col>
                 <v-col cols="8">
                   <v-data-table
-                      :key="renderSuccessorKey"
-                      :headers="exceptionTemplateHeaders"
-                      :items="formState.successors"
-                      item-value="rightId"
-                      loading-text="Daten werden geladen... Bitte warten."
+                    :key="renderSuccessorKey"
+                    :headers="exceptionTemplateHeaders"
+                    :items="formState.successors"
+                    item-value="rightId"
+                    loading-text="Daten werden geladen... Bitte warten."
                   >
                     <template v-slot:item.templateName="{ item }">
                       <td>
                         <a
-                            v-bind:href="
-                              url.createTemplateHref(item.rightId)"
-                            target="_blank"
-                        > {{item.templateName}}</a>
+                          v-bind:href="url.createTemplateHref(item.rightId)"
+                          target="_blank"
+                        >
+                          {{ item.templateName }}</a
+                        >
                       </td>
                     </template>
                     <template v-slot:item.actions="{ item }">
-                      <v-tooltip
-                          location="bottom"
-                      >
+                      <v-tooltip location="bottom">
                         <template v-slot:activator="{ props }">
                           <div v-bind="props" class="d-inline-block">
                             <v-icon
-                                :disabled="!userStore.isLoggedIn"
-                                @click="deleteSuccessorEntry(item)"
+                              :disabled="!userStore.isLoggedIn"
+                              @click="deleteSuccessorEntry(item)"
                             >
                               mdi-delete
                             </v-icon>
@@ -2436,22 +2482,24 @@ export default defineComponent({
                     <template #bottom></template>
                   </v-data-table>
                   <v-btn
-                      color="blue darken-1"
-                      :disabled="!userStore.isLoggedIn || formState.successors.length != 0"
-                      @click="openDialogSuccessor"
-                  >Nachfolger verknüpfen
+                    color="blue darken-1"
+                    :disabled="
+                      !userStore.isLoggedIn || formState.successors.length != 0
+                    "
+                    @click="openDialogSuccessor"
+                    >Nachfolger verknüpfen
                   </v-btn>
                   <v-dialog
-                      v-model="dialogConnectSuccessor"
-                      :retain-focus="false"
-                      max-width="500px"
+                    v-model="dialogConnectSuccessor"
+                    :retain-focus="false"
+                    max-width="500px"
                   >
                     <RelationshipConnect
-                        :reinit-counter="dialogConnectSuccessorCounter"
-                        :rightId="rightId"
-                        :relationship="'successor'"
-                        v-on:successorSelected="connectSuccessorRelationship"
-                        v-on:relationshipConnectClosed="closeDialogSuccessor"
+                      :reinit-counter="dialogConnectSuccessorCounter"
+                      :rightId="rightId"
+                      :relationship="'successor'"
+                      v-on:successorSelected="connectSuccessorRelationship"
+                      v-on:relationshipConnectClosed="closeDialogSuccessor"
                     ></RelationshipConnect>
                   </v-dialog>
                 </v-col>
@@ -2461,7 +2509,7 @@ export default defineComponent({
         </v-expansion-panel>
         <v-expansion-panel value="1">
           <v-expansion-panel-title
-          >Steuerungsrelevante Elemente
+            >Steuerungsrelevante Elemente
           </v-expansion-panel-title>
           <v-expansion-panel-text eager>
             <v-container fluid>
@@ -2469,22 +2517,22 @@ export default defineComponent({
                 <v-col cols="4"> Right-Id</v-col>
                 <v-col cols="8">
                   <v-text-field
-                      v-if="isNew"
-                      ref="rightId"
-                      readonly
-                      hint="Rechte Id"
-                      label="Wird automatisch generiert"
-                      bg-color="grey-lighten-2"
-                      variant="outlined"
+                    v-if="isNew"
+                    ref="rightId"
+                    readonly
+                    hint="Rechte Id"
+                    label="Wird automatisch generiert"
+                    bg-color="grey-lighten-2"
+                    variant="outlined"
                   ></v-text-field>
                   <v-text-field
-                      v-if="!isNew"
-                      ref="rightId"
-                      v-model="tmpRight.rightId"
-                      readonly
-                      bg-color="grey-lighten-2"
-                      hint="Rechte Id"
-                      variant="outlined"
+                    v-if="!isNew"
+                    ref="rightId"
+                    v-model="tmpRight.rightId"
+                    readonly
+                    bg-color="grey-lighten-2"
+                    hint="Rechte Id"
+                    variant="outlined"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -2492,13 +2540,13 @@ export default defineComponent({
                 <v-col cols="4"> Aktueller Access-Status</v-col>
                 <v-col cols="8">
                   <v-select
-                      v-model="formState.accessState"
-                      v-bind="attrWithROProps"
-                      :error-messages="errorAccessState"
-                      :items="accessStatusSelect"
-                      variant="outlined"
-                      @blur="v$.accessState.$touch()"
-                      @change="v$.accessState.$touch()"
+                    v-model="formState.accessState"
+                    v-bind="attrWithROProps"
+                    :error-messages="errorAccessState"
+                    :items="accessStatusSelect"
+                    variant="outlined"
+                    @blur="v$.accessState.$touch()"
+                    @change="v$.accessState.$touch()"
                   ></v-select>
                 </v-col>
               </v-row>
@@ -2506,30 +2554,31 @@ export default defineComponent({
                 <v-col cols="4"> Gültigkeit Startdatum</v-col>
                 <v-col cols="8">
                   <v-menu
-                      :close-on-content-click="false"
-                      :location="'bottom'"
-                      v-model="isStartDateMenuOpen"
-                      :disabled="!isEditable"
+                    :close-on-content-click="false"
+                    :location="'bottom'"
+                    v-model="isStartDateMenuOpen"
+                    :disabled="!isEditable"
                   >
                     <template v-slot:activator="{ props }">
                       <v-text-field
-                          :modelValue="startDateFormatted"
-                          :error-messages="errorStartDate"
-                          label="Start-Datum"
-                          variant="outlined"
-                          prepend-icon="mdi-calendar"
-                          required
-                          readonly
-                          v-bind="mergeSlotWithReadonly(props)"
-                          @blur="v$.startDate.$touch()"
-                          @change="v$.startDate.$touch()"
+                        :modelValue="startDateFormatted"
+                        :error-messages="errorStartDate"
+                        label="Start-Datum"
+                        variant="outlined"
+                        prepend-icon="mdi-calendar"
+                        required
+                        readonly
+                        v-bind="mergeSlotWithReadonly(props)"
+                        @blur="v$.startDate.$touch()"
+                        @change="v$.startDate.$touch()"
                       ></v-text-field>
                     </template>
                     <v-date-picker
-                        :allowed-dates="allowedDates"
-                        first-day-of-week="1"
-                        v-model="formState.startDate"
-                        color="primary">
+                      :allowed-dates="allowedDates"
+                      first-day-of-week="1"
+                      v-model="formState.startDate"
+                      color="primary"
+                    >
                       <template v-slot:header></template>
                     </v-date-picker>
                   </v-menu>
@@ -2550,31 +2599,32 @@ export default defineComponent({
                 <v-col cols="4"> Gültigkeit Enddatum</v-col>
                 <v-col cols="8">
                   <v-menu
-                      :close-on-content-click="false"
-                      :location="'bottom'"
-                      v-model="isEndDateMenuOpen"
-                      :disabled="!userStore.isLoggedIn"
+                    :close-on-content-click="false"
+                    :location="'bottom'"
+                    v-model="isEndDateMenuOpen"
+                    :disabled="!userStore.isLoggedIn"
                   >
                     <template v-slot:activator="{ props }">
                       <v-text-field
-                          :modelValue="endDateFormatted"
-                          @update:modelValue="updateEndDate"
-                          :error-messages="errorEndDate"
-                          label="End-Datum"
-                          variant="outlined"
-                          prepend-icon="mdi-calendar"
-                          readonly
-                          required
-                          @blur="v$.endDate.$touch()"
-                          @change="v$.endDate.$touch()"
-                          v-bind="mergeSlotWithLogin(props)"
+                        :modelValue="endDateFormatted"
+                        @update:modelValue="updateEndDate"
+                        :error-messages="errorEndDate"
+                        label="End-Datum"
+                        variant="outlined"
+                        prepend-icon="mdi-calendar"
+                        readonly
+                        required
+                        @blur="v$.endDate.$touch()"
+                        @change="v$.endDate.$touch()"
+                        v-bind="mergeSlotWithLogin(props)"
                       ></v-text-field>
                     </template>
                     <v-date-picker
-                        first-day-of-week="1"
-                        :allowed-dates="allowedDates"
-                        v-model="formState.endDate"
-                        color="primary">
+                      first-day-of-week="1"
+                      :allowed-dates="allowedDates"
+                      v-model="formState.endDate"
+                      color="primary"
+                    >
                       <template v-slot:header></template>
                     </v-date-picker>
                   </v-menu>
@@ -2584,38 +2634,38 @@ export default defineComponent({
                 <v-col cols="4">IP-Gruppe</v-col>
                 <v-col cols="8">
                   <v-select
-                      v-if="!isEditable || formState.accessState != 'Restricted'"
-                      bg-color="grey-lighten-2"
-                      readonly
-                      v-model="formState.selectedGroups"
-                      :items="groupItems"
-                      :error-messages="errorIPGroup"
-                      @blur="v$.selectedGroups.$touch()"
-                      @change="v$.selectedGroups.$touch()"
-                      chips
-                      multiple
-                      counter
-                      hint="Einschränkung des Zugriffs auf Berechtigungsgruppen (nur verfügbar für Restricted)"
-                      variant="outlined"
-                      return-object
-                      item-title="title"
+                    v-if="!isEditable || formState.accessState != 'Restricted'"
+                    bg-color="grey-lighten-2"
+                    readonly
+                    v-model="formState.selectedGroups"
+                    :items="groupItems"
+                    :error-messages="errorIPGroup"
+                    @blur="v$.selectedGroups.$touch()"
+                    @change="v$.selectedGroups.$touch()"
+                    chips
+                    multiple
+                    counter
+                    hint="Einschränkung des Zugriffs auf Berechtigungsgruppen (nur verfügbar für Restricted)"
+                    variant="outlined"
+                    return-object
+                    item-title="title"
                   >
                   </v-select>
                   <v-select
-                      v-else
-                      v-model="formState.selectedGroups"
-                      :items="groupItems"
-                      :error-messages="errorIPGroup"
-                      @blur="v$.selectedGroups.$touch()"
-                      @change="v$.selectedGroups.$touch()"
-                      bg-color="white"
-                      chips
-                      multiple
-                      counter
-                      hint="Einschränkung des Zugriffs auf Berechtigungsgruppen"
-                      variant="outlined"
-                      return-object
-                      item-title="title"
+                    v-else
+                    v-model="formState.selectedGroups"
+                    :items="groupItems"
+                    :error-messages="errorIPGroup"
+                    @blur="v$.selectedGroups.$touch()"
+                    @change="v$.selectedGroups.$touch()"
+                    bg-color="white"
+                    chips
+                    multiple
+                    counter
+                    hint="Einschränkung des Zugriffs auf Berechtigungsgruppen"
+                    variant="outlined"
+                    return-object
+                    item-title="title"
                   >
                   </v-select>
                 </v-col>
@@ -2624,12 +2674,12 @@ export default defineComponent({
                 <v-col cols="4"> Bemerkungen</v-col>
                 <v-col cols="8">
                   <v-textarea
-                      v-model="tmpRight.notesGeneral"
-                      counter
-                      hint="Allgemeine Bemerkungen"
-                      maxlength="256"
-                      variant="outlined"
-                      v-bind="attrWithLogin"
+                    v-model="tmpRight.notesGeneral"
+                    counter
+                    hint="Allgemeine Bemerkungen"
+                    maxlength="256"
+                    variant="outlined"
+                    v-bind="attrWithLogin"
                   ></v-textarea>
                 </v-col>
               </v-row>
@@ -2644,17 +2694,15 @@ export default defineComponent({
                 <v-col cols="4"> Lizenzvertrag</v-col>
                 <v-col cols="8">
                   <v-text-field
-                      v-bind="attrWithLogin"
-                      v-model="tmpRight.licenceContract"
-                      hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
-                      variant="outlined"
+                    v-bind="attrWithLogin"
+                    v-model="tmpRight.licenceContract"
+                    hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
+                    variant="outlined"
                   ></v-text-field>
                 </v-col>
               </v-row>
               <v-row v-if="isTabEntry || isNewRight">
-                <v-col cols="4">
-                  Lizenz-URL am Objekt
-                </v-col>
+                <v-col cols="4"> Lizenz-URL am Objekt </v-col>
                 <v-col cols="8">
                   {{ computedLicenceUrl }}
                   <div class="text-caption text-grey-darken-1 mt-1">
@@ -2663,17 +2711,16 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col
-                    cols="4"
-                >
-                  Urheberrechtsschranke ohne vertragrechtliches Risiko anwendbar?
+                <v-col cols="4">
+                  Urheberrechtsschranke ohne vertragrechtliches Risiko
+                  anwendbar?
                 </v-col>
                 <v-col cols="8">
                   <v-select
-                      v-bind="attrWithROProps"
-                      v-model="formState.hasLegalRisk"
-                      :items="legalRiskSelect"
-                      variant="outlined"
+                    v-bind="attrWithROProps"
+                    v-model="formState.hasLegalRisk"
+                    :items="legalRiskSelect"
+                    variant="outlined"
                   ></v-select>
                 </v-col>
               </v-row>
@@ -2681,12 +2728,12 @@ export default defineComponent({
                 <v-col cols="4"> ZBW Nutzungsvereinbarung</v-col>
                 <v-col cols="8">
                   <v-switch
-                      v-model="tmpRight.zbwUserAgreement"
-                      :readonly="!isEditable"
-                      color="indigo"
-                      hint="Gibt Auskunft darüber, ob eine Nutzungsvereinbarung für dieses Item als Nutzungsrechtsquelle vorliegt."
-                      :label="labelModelToString(tmpRight.zbwUserAgreement)"
-                      persistent-hint
+                    v-model="tmpRight.zbwUserAgreement"
+                    :readonly="!isEditable"
+                    color="indigo"
+                    hint="Gibt Auskunft darüber, ob eine Nutzungsvereinbarung für dieses Item als Nutzungsrechtsquelle vorliegt."
+                    :label="labelModelToString(tmpRight.zbwUserAgreement)"
+                    persistent-hint
                   ></v-switch>
                 </v-col>
               </v-row>
@@ -2694,12 +2741,14 @@ export default defineComponent({
                 <v-col cols="4"> Open-Content mit Einschränkung</v-col>
                 <v-col cols="8">
                   <v-switch
-                      v-model="tmpRight.restrictedOpenContentLicence"
-                      :readonly="!isEditable"
-                      color="indigo"
-                      hint="Gilt für die Open-Content-Lizenz dieses Items eine Einschränkung, weil Material mit anderen Lizenzen enthalten ist?"
-                      :label="labelModelToString(tmpRight.restrictedOpenContentLicence)"
-                      persistent-hint
+                    v-model="tmpRight.restrictedOpenContentLicence"
+                    :readonly="!isEditable"
+                    color="indigo"
+                    hint="Gilt für die Open-Content-Lizenz dieses Items eine Einschränkung, weil Material mit anderen Lizenzen enthalten ist?"
+                    :label="
+                      labelModelToString(tmpRight.restrictedOpenContentLicence)
+                    "
+                    persistent-hint
                   ></v-switch>
                 </v-col>
               </v-row>
@@ -2707,12 +2756,12 @@ export default defineComponent({
                 <v-col cols="4"> Bemerkungen</v-col>
                 <v-col cols="8">
                   <v-textarea
-                      v-model="tmpRight.notesFormalRules"
-                      counter
-                      hint="Bemerkungen für formale Regelungen"
-                      maxlength="256"
-                      variant="outlined"
-                      v-bind="attrWithLogin"
+                    v-model="tmpRight.notesFormalRules"
+                    counter
+                    hint="Bemerkungen für formale Regelungen"
+                    maxlength="256"
+                    variant="outlined"
+                    v-bind="attrWithLogin"
                   ></v-textarea>
                 </v-col>
               </v-row>
@@ -2721,7 +2770,7 @@ export default defineComponent({
         </v-expansion-panel>
         <v-expansion-panel value="2">
           <v-expansion-panel-title
-          >Prozessdokumentierende Elemente
+            >Prozessdokumentierende Elemente
           </v-expansion-panel-title>
           <v-expansion-panel-text eager>
             <v-container fluid>
@@ -2729,10 +2778,10 @@ export default defineComponent({
                 <v-col cols="4"> Basis der Speicherung</v-col>
                 <v-col cols="8">
                   <v-select
-                      v-bind="attrWithROProps"
-                      v-model="formState.basisStorage"
-                      :items="basisStorage"
-                      variant="outlined"
+                    v-bind="attrWithROProps"
+                    v-model="formState.basisStorage"
+                    :items="basisStorage"
+                    variant="outlined"
                   ></v-select>
                 </v-col>
               </v-row>
@@ -2740,10 +2789,10 @@ export default defineComponent({
                 <v-col cols="4"> Basis des Access-Status</v-col>
                 <v-col cols="8">
                   <v-select
-                      v-bind="attrWithROProps"
-                      v-model="formState.basisAccessState"
-                      :items="basisAccessState"
-                      variant="outlined"
+                    v-bind="attrWithROProps"
+                    v-model="formState.basisAccessState"
+                    :items="basisAccessState"
+                    variant="outlined"
                   ></v-select>
                 </v-col>
               </v-row>
@@ -2751,12 +2800,12 @@ export default defineComponent({
                 <v-col cols="4"> Bemerkungen</v-col>
                 <v-col cols="8">
                   <v-textarea
-                      v-model="tmpRight.notesProcessDocumentation"
-                      counter
-                      hint="Bemerkungen für prozessdokumentierende Elemente"
-                      maxlength="256"
-                      variant="outlined"
-                      v-bind="attrWithLogin"
+                    v-model="tmpRight.notesProcessDocumentation"
+                    counter
+                    hint="Bemerkungen für prozessdokumentierende Elemente"
+                    maxlength="256"
+                    variant="outlined"
+                    v-bind="attrWithLogin"
                   ></v-textarea>
                 </v-col>
               </v-row>
@@ -2773,10 +2822,10 @@ export default defineComponent({
                 <v-col cols="4"> Erstellt am</v-col>
                 <v-col cols="8">
                   <v-text-field
-                      v-bind="attrWithROProps"
-                      v-model="tmpRight.createdOn"
-                      variant="outlined"
-                      hint="Erstellungsdatum des Templates"
+                    v-bind="attrWithROProps"
+                    v-model="tmpRight.createdOn"
+                    variant="outlined"
+                    hint="Erstellungsdatum des Templates"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -2784,10 +2833,10 @@ export default defineComponent({
                 <v-col cols="4"> Erstellt von</v-col>
                 <v-col cols="8">
                   <v-text-field
-                      v-model="tmpRight.createdBy"
-                      variant="outlined"
-                      readonly
-                      bg-color="grey-lighten-2"
+                    v-model="tmpRight.createdBy"
+                    variant="outlined"
+                    readonly
+                    bg-color="grey-lighten-2"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -2795,10 +2844,10 @@ export default defineComponent({
                 <v-col cols="4"> Zuletzt editiert am</v-col>
                 <v-col cols="8">
                   <v-text-field
-                      v-model="tmpRight.lastUpdatedOn"
-                      variant="outlined"
-                      readonly
-                      bg-color="grey-lighten-2"
+                    v-model="tmpRight.lastUpdatedOn"
+                    variant="outlined"
+                    readonly
+                    bg-color="grey-lighten-2"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -2806,10 +2855,10 @@ export default defineComponent({
                 <v-col cols="4"> Zuletzt editiert von</v-col>
                 <v-col cols="8">
                   <v-text-field
-                      v-model="tmpRight.lastUpdatedBy"
-                      variant="outlined"
-                      readonly
-                      bg-color="grey-lighten-2"
+                    v-model="tmpRight.lastUpdatedBy"
+                    variant="outlined"
+                    readonly
+                    bg-color="grey-lighten-2"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -2817,12 +2866,12 @@ export default defineComponent({
                 <v-col cols="4"> Bemerkungen</v-col>
                 <v-col cols="8">
                   <v-textarea
-                      v-model="tmpRight.notesManagementRelated"
-                      counter
-                      hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
-                      maxlength="256"
-                      variant="outlined"
-                      v-bind="attrWithLogin"
+                    v-model="tmpRight.notesManagementRelated"
+                    counter
+                    hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
+                    maxlength="256"
+                    variant="outlined"
+                    v-bind="attrWithLogin"
                   ></v-textarea>
                 </v-col>
               </v-row>
@@ -2834,10 +2883,10 @@ export default defineComponent({
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn
-          :disabled="updateInProgress || !userStore.isLoggedIn"
-          color="blue darken-1"
-          @click="save"
-      >Speichern
+        :disabled="updateInProgress || !userStore.isLoggedIn"
+        color="blue darken-1"
+        @click="save"
+        >Speichern
       </v-btn>
     </v-card-actions>
     <v-dialog v-model="updateConfirmDialog" max-width="500px">
@@ -2851,10 +2900,10 @@ export default defineComponent({
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
-              :disabled="updateInProgress"
-              color="blue darken-1"
-              @click="cancelConfirm"
-          >Abbrechen
+            :disabled="updateInProgress"
+            color="blue darken-1"
+            @click="cancelConfirm"
+            >Abbrechen
           </v-btn>
           <v-btn :loading="updateInProgress" color="error" @click="updateRight">
             Update

@@ -1,9 +1,9 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, Ref, ref, watch } from "vue";
 import bookmarkApi from "@/api/bookmarkApi";
-import {BookmarkRest} from "@/generated-sources/openapi";
+import { BookmarkRest } from "@/generated-sources/openapi";
 import error from "@/utils/error";
-import {ReadonlyDataTableHeader} from "@/types/vuetify";
+import { ReadonlyDataTableHeader } from "@/types/vuetify";
 
 export default defineComponent({
   props: {
@@ -33,27 +33,30 @@ export default defineComponent({
     const selectedBookmarks: Ref<Array<BookmarkRest>> = ref([]);
     const getBookmarkList = () => {
       bookmarkApi
-          .getBookmarkList(0, 500) // TODO: simplification for now
-          .then((r: Array<BookmarkRest>) => {
-            bookmarkItems.value = r;
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
+        .getBookmarkList(0, 500) // TODO: simplification for now
+        .then((r: Array<BookmarkRest>) => {
+          bookmarkItems.value = r;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
+        });
     };
 
     const selectedRowColor = (row: any) => {
-      if(selectedBookmarks.value[0] !== undefined && selectedBookmarks.value[0].bookmarkId == row.item.bookmarkId){
-        return { class: "bg-blue-lighten-4"}
+      if (
+        selectedBookmarks.value[0] !== undefined &&
+        selectedBookmarks.value[0].bookmarkId == row.item.bookmarkId
+      ) {
+        return { class: "bg-blue-lighten-4" };
       }
     };
 
     const addActiveItem = (mouseEvent: MouseEvent, row: any) => {
       const bookmark: BookmarkRest | undefined = bookmarkItems.value.find(
-          (e) => e.bookmarkId === row.item.bookmarkId,
+        (e) => e.bookmarkId === row.item.bookmarkId,
       );
       if (bookmark !== undefined) {
         selectedBookmarks.value = [row.item];
@@ -103,50 +106,49 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
 <template>
   <v-card position="relative">
     <v-container>
       <v-card-title>Auswahl Gespeicherte Suche</v-card-title>
       <v-snackbar
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          v-model="errorMsgIsActive"
-          color="error"
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="5000"
+        v-model="errorMsgIsActive"
+        color="error"
       >
         {{ errorMsg }}
       </v-snackbar>
       <v-text-field
-          v-model="searchTerm"
-          append-icon="mdi-magnify"
-          hide-details
-          label="Suche"
-          single-line
+        v-model="searchTerm"
+        append-icon="mdi-magnify"
+        hide-details
+        label="Suche"
+        single-line
       ></v-text-field>
       <v-data-table
-          v-model="selectedBookmarks"
-          :headers="headers"
-          :items="bookmarkItems"
-          :search="searchTerm"
-          :row-props="selectedRowColor"
-          item-value="bookmarkId"
-          select-strategy="single"
-          return-object
-          @click:row="addActiveItem"
+        v-model="selectedBookmarks"
+        :headers="headers"
+        :items="bookmarkItems"
+        :search="searchTerm"
+        :row-props="selectedRowColor"
+        item-value="bookmarkId"
+        select-strategy="single"
+        return-object
+        @click:row="addActiveItem"
       >
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text="Zurück" @click="close"></v-btn>
         <v-btn
-            :disabled="selectedBookmarks.length == 0"
-            color="blue darken-1"
-            text="Speichern"
-            @click="save"
+          :disabled="selectedBookmarks.length == 0"
+          color="blue darken-1"
+          text="Speichern"
+          @click="save"
         >
         </v-btn>
       </v-card-actions>

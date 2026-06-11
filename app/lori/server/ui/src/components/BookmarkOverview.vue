@@ -7,22 +7,19 @@ import navigator_utils from "@/utils/navigator_utils";
 import { useDialogsStore } from "@/stores/dialogs";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import BookmarkSave from "@/components/BookmarkSave.vue";
-import {useUserStore} from "@/stores/user";
-import {ReadonlyDataTableHeader} from "@/types/vuetify";
+import { useUserStore } from "@/stores/user";
+import { ReadonlyDataTableHeader } from "@/types/vuetify";
 import RightsEditWrapper from "@/components/RightsEditWrapper.vue";
 
 export default defineComponent({
-  components: {RightsEditWrapper, BookmarkSave, RightsEditDialog },
+  components: { RightsEditWrapper, BookmarkSave, RightsEditDialog },
   computed: {
     navigator_utils() {
       return navigator_utils;
     },
   },
   props: {},
-  emits: [
-    "executeBookmarkSearch",
-    "bookmarkOverviewClosed",
-  ],
+  emits: ["executeBookmarkSearch", "bookmarkOverviewClosed"],
   setup(props, { emit }) {
     /**
      * Error messages.
@@ -79,40 +76,42 @@ export default defineComponent({
     const getBookmarkList = () => {
       isLoading.value = true;
       bookmarkApi
-          // TODO: Load entries dynamically
-          .getBookmarkList(0, 500)
-          .then((r: Array<BookmarkRest>) => {
-            bookmarkItems.value = r;
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              bookmarkErrorMsg.value = errMsg;
-              bookmarkError.value = true;
-            });
-          })
-          .finally(() => {
-              isLoading.value = false;
+        // TODO: Load entries dynamically
+        .getBookmarkList(0, 500)
+        .then((r: Array<BookmarkRest>) => {
+          bookmarkItems.value = r;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            bookmarkErrorMsg.value = errMsg;
+            bookmarkError.value = true;
           });
+        })
+        .finally(() => {
+          isLoading.value = false;
+        });
     };
 
     const deleteBookmarkEntry = () => {
       bookmarkApi
-          .deleteBookmark(editBookmark.value.bookmarkId)
-          .then(() => {
-            bookmarkItems.value.splice(editIndex.value, 1);
-            renderKey.value += 1;
-            closeDeleteDialog();
-            alertSuccessful.value = true;
-            alertSuccessfulMsg.value =
-                "Gespeicherte Suche '" + editBookmark.value.bookmarkName + "' wurde erfolgreich gelöscht.";
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              bookmarkErrorMsg.value = errMsg;
-              bookmarkError.value = true;
-            });
-            closeDeleteDialog();
+        .deleteBookmark(editBookmark.value.bookmarkId)
+        .then(() => {
+          bookmarkItems.value.splice(editIndex.value, 1);
+          renderKey.value += 1;
+          closeDeleteDialog();
+          alertSuccessful.value = true;
+          alertSuccessfulMsg.value =
+            "Gespeicherte Suche '" +
+            editBookmark.value.bookmarkName +
+            "' wurde erfolgreich gelöscht.";
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            bookmarkErrorMsg.value = errMsg;
+            bookmarkError.value = true;
           });
+          closeDeleteDialog();
+        });
     };
 
     const openDeleteDialog = (bookmark: BookmarkRest) => {
@@ -132,7 +131,7 @@ export default defineComponent({
       bookmarkItems.value[editIndex.value] = bookmark;
       alertSuccessful.value = true;
       alertSuccessfulMsg.value =
-          "Bookmark '" + bookmark.bookmarkName + "' erfolgreich editiert.";
+        "Bookmark '" + bookmark.bookmarkName + "' erfolgreich editiert.";
     };
 
     const closeEditDialog = () => {
@@ -180,7 +179,7 @@ export default defineComponent({
     const childTemplateAdded = (template: RightRest) => {
       alertSuccessful.value = true;
       alertSuccessfulMsg.value =
-          "Template '" + template.templateName + "' wurde erfolgreich erstellt.";
+        "Template '" + template.templateName + "' wurde erfolgreich erstellt.";
       templateDialogActivated.value = false;
       dialogStore.templateOverviewActivated = true;
       close();
@@ -199,7 +198,7 @@ export default defineComponent({
     onMounted(() => getBookmarkList());
 
     const computedBookmarkOverview = computed(
-        () => dialogStore.bookmarkOverviewActivated,
+      () => dialogStore.bookmarkOverviewActivated,
     );
     watch(computedBookmarkOverview, (currentValue) => {
       if (currentValue) {
@@ -246,41 +245,38 @@ export default defineComponent({
   <v-card position="relative">
     <v-toolbar>
       <v-spacer></v-spacer>
-      <v-btn
-          icon="mdi-close"
-          @click="close"
-      ></v-btn>
+      <v-btn icon="mdi-close" @click="close"></v-btn>
     </v-toolbar>
     <v-container>
       <v-snackbar
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          v-model="bookmarkError"
-          color="error"
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="5000"
+        v-model="bookmarkError"
+        color="error"
       >
         {{ bookmarkErrorMsg }}
       </v-snackbar>
       <v-snackbar
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          v-model="alertSuccessful"
-          color="success"
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="5000"
+        v-model="alertSuccessful"
+        color="success"
       >
         {{ alertSuccessfulMsg }}
       </v-snackbar>
       <v-card-title>
         Gespeicherte Suchen
         <v-progress-circular
-            v-if="isLoading"
-            color="blue darken-1"
-            indeterminate
-            class="ml-5"
+          v-if="isLoading"
+          color="blue darken-1"
+          indeterminate
+          class="ml-5"
         ></v-progress-circular>
       </v-card-title>
       <v-dialog v-model="confirmationDialog" max-width="500px">
@@ -289,65 +285,61 @@ export default defineComponent({
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
-                color="blue darken-1"
-                text="Abbrechen"
-                @click="closeDeleteDialog"
+              color="blue darken-1"
+              text="Abbrechen"
+              @click="closeDeleteDialog"
             ></v-btn>
             <v-btn
-                color="error"
-                text="Löschen"
-                @click="deleteBookmarkEntry"
+              color="error"
+              text="Löschen"
+              @click="deleteBookmarkEntry"
             ></v-btn>
             <v-spacer></v-spacer>
           </v-card-actions>
         </v-card>
       </v-dialog>
       <v-text-field
-          v-model="searchTerm"
-          append-icon="mdi-magnify"
-          hide-details
-          label="Suche"
-          single-line
+        v-model="searchTerm"
+        append-icon="mdi-magnify"
+        hide-details
+        label="Suche"
+        single-line
       ></v-text-field>
       <v-data-table
-          :key="renderKey"
-          :headers="headers"
-          :items="bookmarkItems"
-          :search="searchTerm"
-          item-value="bookmarkId"
-          :loading="isLoading"
-          loading-text="Daten werden geladen... Bitte warten."
+        :key="renderKey"
+        :headers="headers"
+        :items="bookmarkItems"
+        :search="searchTerm"
+        item-value="bookmarkId"
+        :loading="isLoading"
+        loading-text="Daten werden geladen... Bitte warten."
       >
         <template v-slot:item.createTemplate="{ item }">
           <v-btn
-              color="blue darken-1"
-              text="Template anlegen"
-              @click="activateTemplateDialog(item)"
-              :disabled="!userStore.isLoggedIn"
+            color="blue darken-1"
+            text="Template anlegen"
+            @click="activateTemplateDialog(item)"
+            :disabled="!userStore.isLoggedIn"
           ></v-btn>
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-tooltip
-              location="bottom"
-              v-if="userStore.isLoggedIn"
-          >
+          <v-tooltip location="bottom" v-if="userStore.isLoggedIn">
             <template v-slot:activator="{ props }">
               <div v-bind="props" class="d-inline-block">
-                <v-btn
-                    variant="text"
-                    icon="mdi-eye"
-                >
-                  <v-icon small>mdi-eye
-                  </v-icon>
+                <v-btn variant="text" icon="mdi-eye">
+                  <v-icon small>mdi-eye </v-icon>
                   <v-overlay
-                      activator="parent"
-                      location="top center"
-                      location-strategy="connected">
+                    activator="parent"
+                    location="top center"
+                    location-strategy="connected"
+                  >
                     <v-card class="pa-2">
-                      {{item.filtersAsQuery}}
+                      {{ item.filtersAsQuery }}
                       <v-btn
-                          @click="navigator_utils.copyToClipboard(item.filtersAsQuery)"
-                          icon="mdi-content-copy"
+                        @click="
+                          navigator_utils.copyToClipboard(item.filtersAsQuery)
+                        "
+                        icon="mdi-content-copy"
                       >
                       </v-btn>
                     </v-card>
@@ -357,38 +349,34 @@ export default defineComponent({
             </template>
             <span>Suchstring anzeigen und kopieren</span>
           </v-tooltip>
-          <v-tooltip
-              location="bottom"
-          >
+          <v-tooltip location="bottom">
             <template v-slot:activator="{ props }">
               <div v-bind="props" class="d-inline-block">
                 <v-btn
-                    variant="text"
-                    @click="executeBookmarkSearch(item)"
-                    icon="mdi-play"
+                  variant="text"
+                  @click="executeBookmarkSearch(item)"
+                  icon="mdi-play"
                 >
                 </v-btn>
               </div>
             </template>
             <span>Suche ausführen</span>
           </v-tooltip>
-          <v-tooltip
-              location="bottom"
-          >
+          <v-tooltip location="bottom">
             <template v-slot:activator="{ props }">
               <div v-bind="props" class="d-inline-block">
                 <v-btn
-                    variant="text"
-                    icon="mdi-pencil"
-                    @click="openEditDialog(item)"
-                    v-if="userStore.isLoggedIn"
+                  variant="text"
+                  icon="mdi-pencil"
+                  @click="openEditDialog(item)"
+                  v-if="userStore.isLoggedIn"
                 >
                 </v-btn>
                 <v-btn
-                    variant="text"
-                    icon="mdi-eye"
-                    @click="openEditDialog(item)"
-                    v-else
+                  variant="text"
+                  icon="mdi-eye"
+                  @click="openEditDialog(item)"
+                  v-else
                 >
                 </v-btn>
               </div>
@@ -396,16 +384,14 @@ export default defineComponent({
             <span v-if="userStore.isLoggedIn">Bearbeiten</span>
             <span v-else>Anzeigen</span>
           </v-tooltip>
-          <v-tooltip
-              location="bottom"
-          >
+          <v-tooltip location="bottom">
             <template v-slot:activator="{ props }">
               <div v-bind="props" class="d-inline-block">
                 <v-btn
-                    variant="text"
-                    @click="openDeleteDialog(item)"
-                    icon="mdi-delete"
-                    :disabled="!userStore.isLoggedIn"
+                  variant="text"
+                  @click="openDeleteDialog(item)"
+                  icon="mdi-delete"
+                  :disabled="!userStore.isLoggedIn"
                 >
                 </v-btn>
               </div>
@@ -415,35 +401,35 @@ export default defineComponent({
         </template>
       </v-data-table>
       <v-dialog
-          v-model="templateDialogActivated"
-          :retain-focus="false"
-          max-width="1500px"
-          max-height="850px"
-          v-on:close="closeTemplateDialog"
-          scrollable
+        v-model="templateDialogActivated"
+        :retain-focus="false"
+        max-width="1500px"
+        max-height="850px"
+        v-on:close="closeTemplateDialog"
+        scrollable
       >
         <RightsEditWrapper
-            :index="-1"
-            :initial-bookmark="currentBookmark"
-            :isNewRight="false"
-            :isNewTemplate="true"
-            :reinit-counter="templateReinitCounter"
-            v-on:addTemplateSuccessful="childTemplateAdded"
-            v-on:editRightClosed="closeTemplateDialog"
+          :index="-1"
+          :initial-bookmark="currentBookmark"
+          :isNewRight="false"
+          :isNewTemplate="true"
+          :reinit-counter="templateReinitCounter"
+          v-on:addTemplateSuccessful="childTemplateAdded"
+          v-on:editRightClosed="closeTemplateDialog"
         ></RightsEditWrapper>
       </v-dialog>
       <v-dialog
-          v-model="editDialogActivated"
-          :retain-focus="false"
-          max-width="1000px"
-          persistent
+        v-model="editDialogActivated"
+        :retain-focus="false"
+        max-width="1000px"
+        persistent
       >
         <BookmarkSave
-            :isNew="false"
-            :reinitCounter="bookmarkEditReinitCounter"
-            :bookmark="editBookmark"
-            v-on:closeEditDialog="closeEditDialog"
-            v-on:editBookmarkSuccessful="editDialogSuccessful"
+          :isNew="false"
+          :reinitCounter="bookmarkEditReinitCounter"
+          :bookmark="editBookmark"
+          v-on:closeEditDialog="closeEditDialog"
+          v-on:editBookmarkSuccessful="editDialogSuccessful"
         ></BookmarkSave>
       </v-dialog>
     </v-container>

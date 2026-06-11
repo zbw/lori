@@ -1,5 +1,5 @@
 <script lang="ts">
-import {computed, defineComponent, onMounted, ref} from "vue";
+import { computed, defineComponent, onMounted, ref } from "vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import usersApi from "@/api/usersApi";
 import error from "@/utils/error";
@@ -7,10 +7,10 @@ import { useCookies } from "vue3-cookies";
 import { UserSessionRest } from "@/generated-sources/openapi";
 import { useUserStore } from "@/stores/user";
 import GroupOverview from "@/components/GroupOverview.vue";
-import {useSearchStore} from "@/stores/search";
+import { useSearchStore } from "@/stores/search";
 
 export default defineComponent({
-  components: {GroupOverview},
+  components: { GroupOverview },
   setup() {
     const cookies = useCookies();
     const searchStore = useSearchStore();
@@ -44,38 +44,38 @@ export default defineComponent({
     const cookieName = "JSESSIONID";
     const login = (init: boolean) => {
       const cookieValue = cookies.cookies.isKey(cookieName)
-          ? cookies.cookies.get(cookieName)
-          : "none";
+        ? cookies.cookies.get(cookieName)
+        : "none";
       usersApi
-          .getSessionById(cookieValue)
-          .then((userSession: UserSessionRest) => {
-            userStore.emailAddress = userSession.email;
-            userStore.permissions = userSession.permissions;
-            userStore.isLoggedIn = true;
-            if (!init) {
-              loginSuccessful.value = true;
-              loginSuccessfulMsg.value =
-                  "You are successfully logged in as " + userSession.email;
-            }
-          })
-          .catch((e) => {
-            error.errorHandling(
-                e,
-                (errMsg: string, errorCode: string, errorDetail: string) => {
-                  userStore.isLoggedIn = false;
-                  console.log("Error Code: " + errorCode);
-                  if (!init) {
-                    if (errorCode == "401") {
-                      loginUnauthorized.value = true;
-                    } else {
-                      loginErrorMsgTitle.value = "Login war nicht erfolgreich";
-                      loginErrorMsg.value = errMsg;
-                      loginError.value = true;
-                    }
-                  }
-                },
-            );
-          });
+        .getSessionById(cookieValue)
+        .then((userSession: UserSessionRest) => {
+          userStore.emailAddress = userSession.email;
+          userStore.permissions = userSession.permissions;
+          userStore.isLoggedIn = true;
+          if (!init) {
+            loginSuccessful.value = true;
+            loginSuccessfulMsg.value =
+              "You are successfully logged in as " + userSession.email;
+          }
+        })
+        .catch((e) => {
+          error.errorHandling(
+            e,
+            (errMsg: string, errorCode: string, errorDetail: string) => {
+              userStore.isLoggedIn = false;
+              console.log("Error Code: " + errorCode);
+              if (!init) {
+                if (errorCode == "401") {
+                  loginUnauthorized.value = true;
+                } else {
+                  loginErrorMsgTitle.value = "Login war nicht erfolgreich";
+                  loginErrorMsg.value = errMsg;
+                  loginError.value = true;
+                }
+              }
+            },
+          );
+        });
     };
     const deactivateLoginDialog = () => {
       loginUnauthorized.value = false;
@@ -84,23 +84,23 @@ export default defineComponent({
     const logoutDialog = ref(false);
     const logout = () => {
       const cookieValue = cookies.cookies.isKey(cookieName)
-          ? cookies.cookies.get(cookieName)
-          : "none";
+        ? cookies.cookies.get(cookieName)
+        : "none";
       usersApi
-          .deleteSessionById(cookieValue)
-          .then(() => {
-            userStore.emailAddress = "";
-            userStore.permissions = undefined;
-            userStore.isLoggedIn = false;
-            logoutDialog.value = true;
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              loginErrorMsgTitle.value = "Logout war nicht erfolgreich";
-              loginErrorMsg.value = errMsg;
-              loginError.value = true;
-            });
+        .deleteSessionById(cookieValue)
+        .then(() => {
+          userStore.emailAddress = "";
+          userStore.permissions = undefined;
+          userStore.isLoggedIn = false;
+          logoutDialog.value = true;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            loginErrorMsgTitle.value = "Logout war nicht erfolgreich";
+            loginErrorMsg.value = errMsg;
+            loginError.value = true;
           });
+        });
     };
 
     const deactivateLogoutDialog = () => {
@@ -109,11 +109,11 @@ export default defineComponent({
 
     const appBarColor = computed(() => {
       switch (searchStore.stage) {
-        case 'prod':
+        case "prod":
           return "#1565C0";
-        case 'qs':
+        case "qs":
           return "#EB6B05";
-        case 'dev':
+        case "dev":
           return "#EB6B05";
         default:
           return "#FFFFFF"; // default or loading state
@@ -147,21 +147,17 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
 <template>
-  <v-app-bar
-      app
-      :color="appBarColor"
-  >
+  <v-app-bar app :color="appBarColor">
     <div class="d-flex align-center">
       <v-img
-          alt="Lori Logo"
-          class="shrink mr-2"
-          contain
-          src="@/assets/LogoLori.png"
-          transition="scale-transition"
-          width="100"
+        alt="Lori Logo"
+        class="shrink mr-2"
+        contain
+        src="@/assets/LogoLori.png"
+        transition="scale-transition"
+        width="100"
       />
     </div>
 
@@ -173,22 +169,22 @@ export default defineComponent({
       <v-list>
         <v-list-item link>
           <v-list-item-title @click="activateDashboardDialog"
-          >Dashboard</v-list-item-title
+            >Dashboard</v-list-item-title
           >
         </v-list-item>
         <v-list-item link>
           <v-list-item-title @click="activateGroupDialog"
-          >IP-Gruppen</v-list-item-title
+            >IP-Gruppen</v-list-item-title
           >
         </v-list-item>
         <v-list-item link>
           <v-list-item-title @click="activateTemplateDialog"
-          >Templates</v-list-item-title
+            >Templates</v-list-item-title
           >
         </v-list-item>
         <v-list-item link>
           <v-list-item-title @click="activateBookmarkOverviewDialog"
-          >Gespeicherte Suchen</v-list-item-title
+            >Gespeicherte Suchen</v-list-item-title
           >
         </v-list-item>
       </v-list>
@@ -205,12 +201,12 @@ export default defineComponent({
       </template>
       <v-list v-if="!userStore.isLoggedIn" class="cursor-pointer">
         <v-hover>
-          <template v-slot:default="{isHovering, props }">
+          <template v-slot:default="{ isHovering, props }">
             <v-list-item
-                v-bind="props"
-                :key="1"
-                :value="1"
-                :base-color="isHovering ? 'primary' : undefined"
+              v-bind="props"
+              :key="1"
+              :value="1"
+              :base-color="isHovering ? 'primary' : undefined"
             >
               <v-list-item-title @click="login(false)">Login</v-list-item-title>
             </v-list-item>
@@ -222,12 +218,14 @@ export default defineComponent({
         <v-hover>
           <template v-slot:default="{ isHovering, props }">
             <v-list-item
-                v-bind="props"
-                :key="1"
-                :value="1"
-                :base-color="isHovering ? 'primary' : undefined"
+              v-bind="props"
+              :key="1"
+              :value="1"
+              :base-color="isHovering ? 'primary' : undefined"
             >
-              <v-list-item-title>{{ userStore.emailAddress }}</v-list-item-title>
+              <v-list-item-title>{{
+                userStore.emailAddress
+              }}</v-list-item-title>
             </v-list-item>
           </template>
         </v-hover>
@@ -236,10 +234,10 @@ export default defineComponent({
         <v-hover>
           <template v-slot:default="{ isHovering, props }">
             <v-list-item
-                v-bind="props"
-                :key="2"
-                :value="2"
-                :base-color="isHovering ? 'primary' : undefined"
+              v-bind="props"
+              :key="2"
+              :value="2"
+              :base-color="isHovering ? 'primary' : undefined"
             >
               <v-list-item-title @click="logout">Logout</v-list-item-title>
             </v-list-item>
@@ -274,7 +272,8 @@ export default defineComponent({
       <v-card>
         <v-card-title class="text-h5">Logout</v-card-title>
         <v-card-text>
-          Bitte <a :href="userStore.signOutURL" target="_blank">hier</a> klicken zum Logout
+          Bitte <a :href="userStore.signOutURL" target="_blank">hier</a> klicken
+          zum Logout
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>

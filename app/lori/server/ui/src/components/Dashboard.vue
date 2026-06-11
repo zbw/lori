@@ -1,14 +1,16 @@
 <script lang="ts">
-
-
-import {computed, defineComponent, onMounted, Ref, ref, watch} from "vue";
-import {RightErrorInformationRest, RightErrorRecomputationRest, RightErrorRest} from "@/generated-sources/openapi";
+import { computed, defineComponent, onMounted, Ref, ref, watch } from "vue";
+import {
+  RightErrorInformationRest,
+  RightErrorRecomputationRest,
+  RightErrorRest,
+} from "@/generated-sources/openapi";
 import error from "@/utils/error";
 import rightErrorApi from "@/api/rightErrorApi";
 import url from "@/utils/url";
 import date_utils from "@/utils/date_utils";
-import {ReadonlyDataTableHeader} from "@/types/vuetify";
-import {useUserStore} from "@/stores/user";
+import { ReadonlyDataTableHeader } from "@/types/vuetify";
+import { useUserStore } from "@/stores/user";
 
 export default defineComponent({
   computed: {
@@ -23,10 +25,8 @@ export default defineComponent({
       required: false,
     },
   },
-  emits: [
-    "dashboardClosed"
-  ],
-  setup(props, {emit}) {
+  emits: ["dashboardClosed"],
+  setup(props, { emit }) {
     const userStore = useUserStore();
     /**
      * Table:
@@ -59,36 +59,36 @@ export default defineComponent({
       {
         title: "Erzeugt am",
         value: "createdOn",
-        sortable: true
+        sortable: true,
       },
     ];
 
     const getErrorList = () => {
       rightErrorApi
-          .getRightErrorList(
-              (currentPage.value - 1) * pageSize.value,
-              pageSize.value,
-              buildTemplateNameFilter(),
-              startDateFormatted.value != "" ? startDateFormatted.value : undefined,
-              endDateFormatted.value != "" ? endDateFormatted.value : undefined,
-              buildConflictTypeFilter(),
-              props.testId,
-          )
-          .then((r: RightErrorInformationRest) => {
-            totalPages.value = r.totalPages;
-            errorItems.value = r.errors;
-            numberOfResults.value = r.numberOfResults;
-            receivedContextNames.value = r.contextNames;
-            receivedConflictTypes.value = r.conflictTypes;
-            isResetting.value = false;
-          })
-          .catch((e) => {
-            isResetting.value = false;
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
+        .getRightErrorList(
+          (currentPage.value - 1) * pageSize.value,
+          pageSize.value,
+          buildTemplateNameFilter(),
+          startDateFormatted.value != "" ? startDateFormatted.value : undefined,
+          endDateFormatted.value != "" ? endDateFormatted.value : undefined,
+          buildConflictTypeFilter(),
+          props.testId,
+        )
+        .then((r: RightErrorInformationRest) => {
+          totalPages.value = r.totalPages;
+          errorItems.value = r.errors;
+          numberOfResults.value = r.numberOfResults;
+          receivedContextNames.value = r.contextNames;
+          receivedConflictTypes.value = r.conflictTypes;
+          isResetting.value = false;
+        })
+        .catch((e) => {
+          isResetting.value = false;
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
+        });
     };
     const searchTerm = ref("");
     const currentPage = ref(1);
@@ -105,24 +105,26 @@ export default defineComponent({
     const receivedConflictTypes: Ref<Array<string>> = ref([]);
     const selectedConflictTypes: Ref<Array<string>> = ref([]);
 
-    const buildTemplateNameFilter: () => (string | undefined) = () => {
-      if (selectedContextNames.value.length == 0){
+    const buildTemplateNameFilter: () => string | undefined = () => {
+      if (selectedContextNames.value.length == 0) {
         return undefined;
       } else {
         return selectedContextNames.value.join(",");
       }
     };
 
-    const buildConflictTypeFilter: () => (string | undefined) = () => {
-      if (selectedConflictTypes.value.length == 0){
+    const buildConflictTypeFilter: () => string | undefined = () => {
+      if (selectedConflictTypes.value.length == 0) {
         return undefined;
       } else {
         return selectedConflictTypes.value.join(",");
       }
     };
 
-    const prettyPrintConflict: (conflictType: any) => string = (conflictType: string) => {
-      switch (conflictType){
+    const prettyPrintConflict: (conflictType: any) => string = (
+      conflictType: string,
+    ) => {
+      switch (conflictType) {
         case "date_overlap":
           return "Zeitlicher Widerspruch";
         case "gap":
@@ -141,8 +143,8 @@ export default defineComponent({
     const startDateFormatted = ref("");
     const startDateEntered = () => {
       if (
-          date_utils.isEmptyObject(startDate.value) ||
-          startDate.value == undefined
+        date_utils.isEmptyObject(startDate.value) ||
+        startDate.value == undefined
       ) {
         return "";
       } else {
@@ -155,8 +157,8 @@ export default defineComponent({
     const endDateFormatted = ref("");
     const endDateEntered = () => {
       if (
-          date_utils.isEmptyObject(endDate.value) ||
-          endDate.value == undefined
+        date_utils.isEmptyObject(endDate.value) ||
+        endDate.value == undefined
       ) {
         return "";
       } else {
@@ -178,10 +180,10 @@ export default defineComponent({
     };
     const canReset = computed(() => {
       return (
-          selectedContextNames.value.length > 0 ||
-          selectedConflictTypes.value.length > 0 ||
-          startDateFormatted.value != "" ||
-          endDateFormatted.value != ""
+        selectedContextNames.value.length > 0 ||
+        selectedConflictTypes.value.length > 0 ||
+        startDateFormatted.value != "" ||
+        endDateFormatted.value != ""
       );
     });
 
@@ -192,24 +194,27 @@ export default defineComponent({
     const recomputeErrors = () => {
       recomputationIsRunning.value = true;
       rightErrorApi
-          .recomputeRightErrors()
-          .then((r: RightErrorRecomputationRest) => {
-            successMsgIsActive.value = true;
-            successMsg.value = "Aktualisierung erfolgreich: " + r.numberOfErrors + " Fehler wurden gefunden.";
-            currentPage.value = 1;
-            pageSize.value = 10;
-            getErrorList();
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
-          })
-          .finally(() => {
-            recomputationIsRunning.value = false;
+        .recomputeRightErrors()
+        .then((r: RightErrorRecomputationRest) => {
+          successMsgIsActive.value = true;
+          successMsg.value =
+            "Aktualisierung erfolgreich: " +
+            r.numberOfErrors +
+            " Fehler wurden gefunden.";
+          currentPage.value = 1;
+          pageSize.value = 10;
+          getErrorList();
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
-    }
+        })
+        .finally(() => {
+          recomputationIsRunning.value = false;
+        });
+    };
 
     /**
      * Pagination:
@@ -223,10 +228,9 @@ export default defineComponent({
       getErrorList();
     };
 
-    const createRightHref = (handleId : string, rightId: string | undefined) => {
+    const createRightHref = (handleId: string, rightId: string | undefined) => {
       const handlePP = url.createHandleHref(handleId);
-      return handlePP + "&" +
-          url.QUERY_PARAMETER_RIGHT_ID + "=" + rightId;
+      return handlePP + "&" + url.QUERY_PARAMETER_RIGHT_ID + "=" + rightId;
     };
 
     /**
@@ -256,7 +260,7 @@ export default defineComponent({
     });
 
     watch(selectedContextNames, () => {
-      if(isResetting.value){
+      if (isResetting.value) {
         return;
       } else {
         getErrorList();
@@ -264,7 +268,7 @@ export default defineComponent({
     });
 
     watch(selectedConflictTypes, () => {
-      if(isResetting.value) {
+      if (isResetting.value) {
         return;
       } else {
         getErrorList();
@@ -272,7 +276,7 @@ export default defineComponent({
     });
 
     watch(startDateFormatted, () => {
-      if(isResetting.value){
+      if (isResetting.value) {
         return;
       } else {
         isStartDateMenuOpen.value = false;
@@ -281,7 +285,7 @@ export default defineComponent({
     });
 
     watch(endDateFormatted, () => {
-      if(isResetting.value){
+      if (isResetting.value) {
         return;
       } else {
         isEndDateMenuOpen.value = false;
@@ -332,53 +336,46 @@ export default defineComponent({
     };
   },
 });
-</script><style scoped>
-
-</style>
+</script>
+<style scoped></style>
 
 <template>
   <v-card position="relative">
     <v-toolbar>
       <v-spacer></v-spacer>
-      <v-btn
-          icon="mdi-close"
-          @click="close"
-      ></v-btn>
+      <v-btn icon="mdi-close" @click="close"></v-btn>
     </v-toolbar>
-    <v-card-title class="text-h5">
-      Dashboard
-    </v-card-title
-    >
+    <v-card-title class="text-h5"> Dashboard </v-card-title>
     <v-card-text>
       <v-snackbar
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          v-model="successMsgIsActive"
-          color="success"
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="5000"
+        v-model="successMsgIsActive"
+        color="success"
       >
         {{ successMsg }}
       </v-snackbar>
       <v-snackbar
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          v-model="errorMsgIsActive"
-          color="error"
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="5000"
+        v-model="errorMsgIsActive"
+        color="error"
       >
         {{ errorMsg }}
       </v-snackbar>
       <v-row>
         <v-col cols="auto" class="pa-1">
           <v-btn
-              color="blue darken-1"
-              @click="recomputeErrors"
-              :disabled="!userStore.isLoggedIn"
-              :loading="recomputationIsRunning"
+            color="blue darken-1"
+            @click="recomputeErrors"
+            :disabled="!userStore.isLoggedIn"
+            :loading="recomputationIsRunning"
           >
             Aktualisieren
           </v-btn>
@@ -388,9 +385,9 @@ export default defineComponent({
         <v-col>
           <b>Art</b>
           <v-select
-              multiple
-              v-model="selectedConflictTypes"
-              :items="receivedConflictTypes"
+            multiple
+            v-model="selectedConflictTypes"
+            :items="receivedConflictTypes"
           >
             <template v-slot:selection="{ item }">
               {{ prettyPrintConflict(item.title) }}
@@ -399,9 +396,10 @@ export default defineComponent({
               <v-list-item v-bind="props">
                 <template v-slot:title>
                   <v-icon
-                      v-if="selectedConflictTypes.includes(item.value)"
-                      color="primary"
-                      class="mr-3">
+                    v-if="selectedConflictTypes.includes(item.value)"
+                    color="primary"
+                    class="mr-3"
+                  >
                     mdi-checkbox-marked
                   </v-icon>
                   <v-icon v-else class="mr-3">
@@ -413,10 +411,10 @@ export default defineComponent({
             </template>
           </v-select>
           <v-btn
-              size="small"
-              color="warning"
-              :disabled="!canReset"
-              @click="resetFilter"
+            size="small"
+            color="warning"
+            :disabled="!canReset"
+            @click="resetFilter"
           >
             Filter resetten</v-btn
           >
@@ -424,35 +422,35 @@ export default defineComponent({
         <v-col>
           <b>Kontext</b>
           <v-select
-              multiple
-              v-model="selectedContextNames"
-              :items="receivedContextNames"
+            multiple
+            v-model="selectedContextNames"
+            :items="receivedContextNames"
           ></v-select>
         </v-col>
         <v-col>
           <b>Erzeugungszeitraum</b>
           <v-menu
-              :close-on-content-click="false"
-              :location="'bottom'"
-              v-model="isStartDateMenuOpen"
+            :close-on-content-click="false"
+            :location="'bottom'"
+            v-model="isStartDateMenuOpen"
           >
             <template v-slot:activator="{ props }">
               <v-text-field
-                  v-model="startDateFormatted"
-                  label="Von"
-                  variant="outlined"
-                  prepend-icon="mdi-calendar"
-                  readonly
-                  clearable
-                  v-bind="props"
-                  @update:modelValue="getErrorList"
+                v-model="startDateFormatted"
+                label="Von"
+                variant="outlined"
+                prepend-icon="mdi-calendar"
+                readonly
+                clearable
+                v-bind="props"
+                @update:modelValue="getErrorList"
               ></v-text-field>
             </template>
             <v-date-picker
-                first-day-of-week="1"
-                v-model="startDate"
-                color="primary"
-                @update:modelValue="startDateEntered"
+              first-day-of-week="1"
+              v-model="startDate"
+              color="primary"
+              @update:modelValue="startDateEntered"
             >
               <template v-slot:header></template>
             </v-date-picker>
@@ -460,27 +458,27 @@ export default defineComponent({
         </v-col>
         <v-col class="ma-6">
           <v-menu
-              :close-on-content-click="false"
-              :location="'bottom'"
-              v-model="isEndDateMenuOpen"
+            :close-on-content-click="false"
+            :location="'bottom'"
+            v-model="isEndDateMenuOpen"
           >
             <template v-slot:activator="{ props }">
               <v-text-field
-                  v-model="endDateFormatted"
-                  label="Bis"
-                  variant="outlined"
-                  prepend-icon="mdi-calendar"
-                  readonly
-                  clearable
-                  v-bind="props"
-                  @update:modelValue="getErrorList"
+                v-model="endDateFormatted"
+                label="Bis"
+                variant="outlined"
+                prepend-icon="mdi-calendar"
+                readonly
+                clearable
+                v-bind="props"
+                @update:modelValue="getErrorList"
               ></v-text-field>
             </template>
             <v-date-picker
-                first-day-of-week="1"
-                v-model="endDate"
-                color="primary"
-                @update:modelValue="endDateEntered"
+              first-day-of-week="1"
+              v-model="endDate"
+              color="primary"
+              @update:modelValue="endDateEntered"
             >
               <template v-slot:header></template>
             </v-date-picker>
@@ -488,55 +486,52 @@ export default defineComponent({
         </v-col>
       </v-row>
       <v-row>
-        <v-col>
-          Meldungen: {{ numberOfResults }}
-        </v-col>
+        <v-col> Meldungen: {{ numberOfResults }} </v-col>
       </v-row>
       <v-data-table
-          :key="renderKey"
-          :headers="headers"
-          :items="errorItems"
-          :search="searchTerm"
-          :items-per-page="0"
-          item-value="handleId"
-          loading-text="Daten werden geladen... Bitte warten."
+        :key="renderKey"
+        :headers="headers"
+        :items="errorItems"
+        :search="searchTerm"
+        :items-per-page="0"
+        item-value="handleId"
+        loading-text="Daten werden geladen... Bitte warten."
       >
         <template v-slot:item.conflictByContext="{ item }">
           <td v-if="item.conflictType == 'date_overlap'">
             <a
-                v-bind:href="
-                  url.createTemplateHref(item.conflictByRightId)
-                  "
-                target="_blank"
-            > Template '{{item.conflictByContext}}'</a>
+              v-bind:href="url.createTemplateHref(item.conflictByRightId)"
+              target="_blank"
+            >
+              Template '{{ item.conflictByContext }}'</a
+            >
           </td>
           <td v-else>
             {{ item.conflictByContext }}
           </td>
         </template>
         <template v-slot:item.conflictType="{ item }">
-          <td >
-            {{prettyPrintConflict(item.conflictType)}}
+          <td>
+            {{ prettyPrintConflict(item.conflictType) }}
           </td>
         </template>
         <template v-slot:item.handle="{ item }">
           <td>
-            <a
-                v-bind:href="
-                  url.createHandleHref(item.handle)
-                  "
-                target="_blank"
-            > {{ item.handle}}</a>
+            <a v-bind:href="url.createHandleHref(item.handle)" target="_blank">
+              {{ item.handle }}</a
+            >
           </td>
         </template>
         <template v-slot:item.conflictingWithRightId="{ item }">
           <td v-if="item.conflictingWithRightId != undefined">
             <a
-                v-bind:href="
-                  createRightHref(item.handle, item.conflictingWithRightId)
-                  "
-                target="_blank"
-            > Right-ID: {{ item.conflictingWithRightId }}</a>
+              v-bind:href="
+                createRightHref(item.handle, item.conflictingWithRightId)
+              "
+              target="_blank"
+            >
+              Right-ID: {{ item.conflictingWithRightId }}</a
+            >
           </td>
         </template>
         <template #bottom></template>
@@ -546,22 +541,21 @@ export default defineComponent({
       <v-row>
         <v-col cols="2" sm="2">
           <v-select
-              v-model="pageSize"
-              :items="pageSizes"
-              label="Einträge pro Seite"
+            v-model="pageSize"
+            :items="pageSizes"
+            label="Einträge pro Seite"
           ></v-select>
         </v-col>
         <v-col cols="10" sm="9">
           <v-pagination
-              v-model="currentPage"
-              :length="totalPages"
-              next-icon="mdi-menu-right"
-              prev-icon="mdi-menu-left"
-              total-visible="7"
+            v-model="currentPage"
+            :length="totalPages"
+            next-icon="mdi-menu-right"
+            prev-icon="mdi-menu-left"
+            total-visible="7"
           ></v-pagination>
         </v-col>
       </v-row>
     </v-col>
   </v-card>
 </template>
-

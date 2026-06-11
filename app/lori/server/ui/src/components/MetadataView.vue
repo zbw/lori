@@ -63,11 +63,11 @@ export default defineComponent({
         </v-col>
         <v-col cols="auto">
           <v-btn
-              class="pr-5"
-              density="compact"
-              icon="mdi-help"
-              href="https://zbwintern/wiki/display/stba/LORI+Objekt-Metadaten"
-              target="_blank"
+            class="pr-5"
+            density="compact"
+            icon="mdi-help"
+            href="https://zbwintern/wiki/display/stba/LORI+Objekt-Metadaten"
+            target="_blank"
           ></v-btn>
         </v-col>
       </v-row>
@@ -84,13 +84,13 @@ export default defineComponent({
               <v-col>
                 <td>
                   <a
-                      v-bind:href="
+                    v-bind:href="
                       metadata_utils.hrefHandle(
                         currentMetadata.handle,
                         searchStore.handleURLResolver,
                       )
                     "
-                  >{{
+                    >{{
                       metadata_utils.shortenHandle(currentMetadata.handle)
                     }}</a
                   >
@@ -100,55 +100,58 @@ export default defineComponent({
             <v-row v-show="currentMetadata.collectionName">
               <v-col>Collection</v-col>
               <v-col
-              ><a
+                ><a
                   v-bind:href="
                     metadata_utils.prependHandleUrl(
                       currentMetadata.collectionHandle,
                       searchStore.handleURLResolver,
                     )
                   "
-              >{{ currentMetadata.collectionHandle }}</a
-              ><br>{{ prettyPrint(currentMetadata.collectionName) }}
+                  >{{ currentMetadata.collectionHandle }}</a
+                ><br />{{ prettyPrint(currentMetadata.collectionName) }}
               </v-col>
             </v-row>
             <v-row v-show="currentMetadata.subCommunityHandle">
               <v-col>Subcommunity</v-col>
               <v-col
-              ><a
+                ><a
                   v-bind:href="
                     metadata_utils.prependHandleUrl(
                       currentMetadata.subCommunityHandle,
                       searchStore.handleURLResolver,
                     )
                   "
-              >{{ currentMetadata.subCommunityHandle }}</a
-              ><br>
+                  >{{ currentMetadata.subCommunityHandle }}</a
+                ><br />
                 {{ prettyPrint(currentMetadata.subCommunityName) }}
               </v-col>
             </v-row>
             <v-row v-show="currentMetadata.communityName">
               <v-col>Community</v-col>
               <v-col
-              ><a
+                ><a
                   v-bind:href="
                     metadata_utils.prependHandleUrl(
                       currentMetadata.communityHandle,
                       searchStore.handleURLResolver,
                     )
                   "
-              >{{ currentMetadata.communityHandle }}</a
-              ><br>{{ prettyPrint(currentMetadata.communityName) }}
+                  >{{ currentMetadata.communityHandle }}</a
+                ><br />{{ prettyPrint(currentMetadata.communityName) }}
               </v-col>
             </v-row>
             <v-row v-show="currentMetadata.storageDate">
               <v-col>Speicherdatum im Digitalen Archiv</v-col>
               <v-col>{{
-                  parseDateToLocaleString(currentMetadata.storageDate)
-                }}</v-col>
+                parseDateToLocaleString(currentMetadata.storageDate)
+              }}</v-col>
             </v-row>
             <v-row v-show="currentMetadata.deleted">
               <v-col>Item-Status</v-col>
-              <v-col>❌gelöscht, zuletzt importiert am {{ currentMetadata.lastUpdatedOn.toLocaleString("de") }}</v-col>
+              <v-col
+                >❌gelöscht, zuletzt importiert am
+                {{ currentMetadata.lastUpdatedOn.toLocaleString("de") }}</v-col
+              >
             </v-row>
           </v-container>
         </v-expansion-panel-text>
@@ -166,14 +169,12 @@ export default defineComponent({
             <v-row>
               <v-col>Publikationstyp</v-col>
               <v-col>{{
-                  parsePublicationType(currentMetadata.publicationType)
-                }}</v-col>
+                parsePublicationType(currentMetadata.publicationType)
+              }}</v-col>
             </v-row>
             <v-row>
               <v-col>Publikationsjahr</v-col>
-              <v-col>{{
-                  currentMetadata.publicationYear
-                }}</v-col>
+              <v-col>{{ currentMetadata.publicationYear }}</v-col>
             </v-row>
             <v-row v-show="currentMetadata.ppn">
               <v-col>PPN</v-col>
@@ -188,25 +189,29 @@ export default defineComponent({
               <v-col>
                 <v-list density="compact" class="pa-0">
                   <v-list-item
-                      v-for="(doi, index) in currentMetadata.doi"
-                      :key="index"
-                      class="pa-0"
-                      lines="one"
+                    v-for="(doi, index) in currentMetadata.doi"
+                    :key="index"
+                    class="pa-0"
+                    lines="one"
                   >
                     {{ doi }}
                   </v-list-item>
                 </v-list>
               </v-col>
             </v-row>
-            <v-row v-if="currentMetadata.paketSigel && currentMetadata.paketSigel.length">
+            <v-row
+              v-if="
+                currentMetadata.paketSigel && currentMetadata.paketSigel.length
+              "
+            >
               <v-col>Paket Sigel</v-col>
               <v-col>
                 <v-list density="compact" class="pa-0">
                   <v-list-item
-                      v-for="(paketSigel, index) in currentMetadata.paketSigel"
-                      :key="index"
-                      class="pa-0"
-                      lines="one"
+                    v-for="(paketSigel, index) in currentMetadata.paketSigel"
+                    :key="index"
+                    class="pa-0"
+                    lines="one"
                   >
                     {{ paketSigel }}
                   </v-list-item>
@@ -217,15 +222,17 @@ export default defineComponent({
               <v-col>OC-/CC-Lizenz-URL</v-col>
               <v-col>{{ prettyPrint(currentMetadata.licenceUrl) }}</v-col>
             </v-row>
-            <v-row v-if="currentMetadata.zdbIds && currentMetadata.zdbIds.length">
+            <v-row
+              v-if="currentMetadata.zdbIds && currentMetadata.zdbIds.length"
+            >
               <v-col>ZDB-ID</v-col>
               <v-col>
                 <v-list density="compact" class="pa-0">
                   <v-list-item
-                      v-for="(zdbIds, index) in currentMetadata.zdbIds"
-                      :key="index"
-                      class="pa-0"
-                      lines="one"
+                    v-for="(zdbIds, index) in currentMetadata.zdbIds"
+                    :key="index"
+                    class="pa-0"
+                    lines="one"
                   >
                     {{ zdbIds }}
                   </v-list-item>
@@ -237,10 +244,10 @@ export default defineComponent({
               <v-col>
                 <v-list density="compact" class="pa-0">
                   <v-list-item
-                      v-for="(isbn, index) in currentMetadata.isbn"
-                      :key="index"
-                      class="pa-0"
-                      lines="one"
+                    v-for="(isbn, index) in currentMetadata.isbn"
+                    :key="index"
+                    class="pa-0"
+                    lines="one"
                   >
                     {{ isbn }}
                   </v-list-item>
@@ -268,10 +275,10 @@ export default defineComponent({
               <v-col>
                 <v-list density="compact" class="pa-0">
                   <v-list-item
-                      v-for="(isbn, index) in currentMetadata.issn"
-                      :key="index"
-                      class="pa-0"
-                      lines="one"
+                    v-for="(isbn, index) in currentMetadata.issn"
+                    :key="index"
+                    class="pa-0"
+                    lines="one"
                   >
                     {{ isbn }}
                   </v-list-item>
@@ -286,15 +293,22 @@ export default defineComponent({
               <v-col>Heft</v-col>
               <v-col>{{ prettyPrint(currentMetadata.econstorIssue) }}</v-col>
             </v-row>
-            <v-row v-if="currentMetadata.isPartOfSeries && currentMetadata.isPartOfSeries.length">
+            <v-row
+              v-if="
+                currentMetadata.isPartOfSeries &&
+                currentMetadata.isPartOfSeries.length
+              "
+            >
               <v-col>Serientitel</v-col>
               <v-col>
                 <v-list density="compact" class="pa-0">
                   <v-list-item
-                      v-for="(isPartOfSeries, index) in currentMetadata.isPartOfSeries"
-                      :key="index"
-                      class="pa-0"
-                      lines="one"
+                    v-for="(
+                      isPartOfSeries, index
+                    ) in currentMetadata.isPartOfSeries"
+                    :key="index"
+                    class="pa-0"
+                    lines="one"
                   >
                     {{ isPartOfSeries }}
                   </v-list-item>

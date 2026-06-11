@@ -1,8 +1,8 @@
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, onUnmounted } from 'vue';
+import { defineComponent, ref, computed, onMounted, onUnmounted } from "vue";
 
 export default defineComponent({
-  name: 'ResizableDialog',
+  name: "ResizableDialog",
   props: {
     modelValue: {
       type: Boolean,
@@ -29,7 +29,7 @@ export default defineComponent({
       default: true,
     },
   },
-  emits: ['update:modelValue', 'close'],
+  emits: ["update:modelValue", "close"],
   setup(props, { emit }) {
     const width = ref(props.initialWidth);
     const height = ref(props.initialHeight);
@@ -41,7 +41,7 @@ export default defineComponent({
 
     const model = computed({
       get: () => props.modelValue,
-      set: (val: boolean) => emit('update:modelValue', val),
+      set: (val: boolean) => emit("update:modelValue", val),
     });
 
     const startResize = (e: MouseEvent) => {
@@ -49,8 +49,8 @@ export default defineComponent({
       lastX.value = e.clientX;
       lastY.value = e.clientY;
 
-      document.addEventListener('mousemove', onResize);
-      document.addEventListener('mouseup', stopResize);
+      document.addEventListener("mousemove", onResize);
+      document.addEventListener("mouseup", stopResize);
     };
 
     const onResize = (e: MouseEvent) => {
@@ -67,18 +67,18 @@ export default defineComponent({
 
     const stopResize = () => {
       resizing.value = false;
-      document.removeEventListener('mousemove', onResize);
-      document.removeEventListener('mouseup', stopResize);
+      document.removeEventListener("mousemove", onResize);
+      document.removeEventListener("mouseup", stopResize);
     };
 
     const onEsc = () => {
-      emit('close');
+      emit("close");
     };
 
     // Cleanup in case dialog is destroyed mid-resize
     onUnmounted(() => {
-      document.removeEventListener('mousemove', onResize);
-      document.removeEventListener('mouseup', stopResize);
+      document.removeEventListener("mousemove", onResize);
+      document.removeEventListener("mouseup", stopResize);
     });
 
     return {
@@ -110,16 +110,16 @@ export default defineComponent({
 
 <template>
   <v-dialog
-      v-model="model"
-      :persistent="persistent"
-      :retain-focus="retainFocus"
-      :scrim="scrim"
-      @keydown.esc="onEsc"
-      class="resizable-dialog"
+    v-model="model"
+    :persistent="persistent"
+    :retain-focus="retainFocus"
+    :scrim="scrim"
+    @keydown.esc="onEsc"
+    class="resizable-dialog"
   >
     <template #default>
       <v-card
-          :style="{
+        :style="{
           width: width + 'px',
           height: height + 'px',
           overflow: 'hidden',
@@ -135,10 +135,10 @@ export default defineComponent({
 
         <!-- Resizable content area -->
         <div
-            class="dialog-body"
-            :style="{
+          class="dialog-body"
+          :style="{
             overflow: 'auto',
-            height: (height - headerHeight) + 'px',
+            height: height - headerHeight + 'px',
           }"
         >
           <slot />

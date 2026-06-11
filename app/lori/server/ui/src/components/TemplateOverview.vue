@@ -1,5 +1,5 @@
 <script lang="ts">
-import {computed, defineComponent, onMounted, Ref, ref, watch} from "vue";
+import { computed, defineComponent, onMounted, Ref, ref, watch } from "vue";
 import date_utils from "@/utils/date_utils";
 import error from "@/utils/error";
 import info from "@/utils/info";
@@ -11,10 +11,10 @@ import {
   TemplateApplicationsRest,
 } from "@/generated-sources/openapi";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
-import {useUserStore} from "@/stores/user";
+import { useUserStore } from "@/stores/user";
 import rightErrorApi from "@/api/rightErrorApi";
 import Dashboard from "@/components/Dashboard.vue";
-import {ReadonlyDataTableHeader, SortItem} from "@/types/vuetify";
+import { ReadonlyDataTableHeader, SortItem } from "@/types/vuetify";
 import RightsEditWrapper from "@/components/RightsEditWrapper.vue";
 
 export default defineComponent({
@@ -24,14 +24,11 @@ export default defineComponent({
     },
     date_utils() {
       return date_utils;
-    }
+    },
   },
-  components: {RightsEditWrapper, Dashboard, RightsEditDialog },
+  components: { RightsEditWrapper, Dashboard, RightsEditDialog },
   props: {},
-  emits: [
-    "getItemsByRightId",
-    "templateOverviewClosed",
-  ],
+  emits: ["getItemsByRightId", "templateOverviewClosed"],
   setup(props, { emit }) {
     /**
      * Stores:
@@ -102,9 +99,7 @@ export default defineComponent({
     /**
      * Sorting (default by 'createdOn', when filtered by 'templateName')
      */
-    const sortBy = ref<SortItem[]>([
-      { key: 'createdOn', order: 'desc' }
-    ]);
+    const sortBy = ref<SortItem[]>([{ key: "createdOn", order: "desc" }]);
 
     watch(searchTerm, (val) => {
       if (val) {
@@ -134,26 +129,19 @@ export default defineComponent({
     const getTemplateList = () => {
       isLoading.value = true;
       templateApi
-          .getTemplateList(
-              0,
-              500,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-          )
-          .then((r: Array<RightRest>) => {
-            templateItems.value = r;
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
-          })
-          .finally(() => {
-            isLoading.value = false;
+        .getTemplateList(0, 500, undefined, undefined, undefined, undefined)
+        .then((r: Array<RightRest>) => {
+          templateItems.value = r;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
+        })
+        .finally(() => {
+          isLoading.value = false;
+        });
     };
 
     const templateEditDialogActivated = ref(false);
@@ -193,9 +181,10 @@ export default defineComponent({
       templateDraft.value.lastUpdatedBy = undefined;
       templateDraft.value.successorId = undefined;
       templateDraft.value.predecessorId = undefined;
-      templateDraft.value.templateName = "KOPIE - " + templateDraft.value.templateName;
+      templateDraft.value.templateName =
+        "KOPIE - " + templateDraft.value.templateName;
       reinitCounter.value = reinitCounter.value + 1;
-      if (templateDraft.value.startDate < new Date()){
+      if (templateDraft.value.startDate < new Date()) {
         templateDraft.value.startDate = new Date();
         templateDraft.value.endDate = undefined;
       }
@@ -207,49 +196,44 @@ export default defineComponent({
         return;
       }
       templateApi
-          .applyTemplates(
-              [template.rightId],
-              false,
-              false,
-              false,
-          )
-          .then((r: TemplateApplicationsRest) => {
-            const templateApplicationResult: TemplateApplicationRest =
-                r.templateApplication[0];
-            const infoMsg = info.constructApplicationInfoText(
-                templateApplicationResult,
-            );
-            successMsgIsActive.value = true;
-            successMsg.value = infoMsg;
-            templateApplyItemsApplied.value = r.templateApplication.length; // TODO: Handle error messages for exceptions
+        .applyTemplates([template.rightId], false, false, false)
+        .then((r: TemplateApplicationsRest) => {
+          const templateApplicationResult: TemplateApplicationRest =
+            r.templateApplication[0];
+          const infoMsg = info.constructApplicationInfoText(
+            templateApplicationResult,
+          );
+          successMsgIsActive.value = true;
+          successMsg.value = infoMsg;
+          templateApplyItemsApplied.value = r.templateApplication.length; // TODO: Handle error messages for exceptions
 
-            // Check for errors
-            let exceptionErrors: Array<RightErrorRest> = [];
-            if (
-                templateApplicationResult.exceptionTemplateApplication !==
-                undefined
-            ) {
-              exceptionErrors =
-                  templateApplicationResult.exceptionTemplateApplication.errors ?? [];
-            }
-            const errors: Array<RightErrorRest> = r.templateApplication
-                .flatMap((t) => (t.errors != undefined ? t.errors : []))
-                .concat(exceptionErrors);
-            if (errors.length > 0) {
-              templateApplyError.value = true;
-              templateApplyErrorMsg.value = errors
-                  .map((err) => err.message)
-                  .join("\n-----------------------------------\n");
-              templateApplyErrorNumber.value = errors.length;
-            }
-            updateTemplateOverview();
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
+          // Check for errors
+          let exceptionErrors: Array<RightErrorRest> = [];
+          if (
+            templateApplicationResult.exceptionTemplateApplication !== undefined
+          ) {
+            exceptionErrors =
+              templateApplicationResult.exceptionTemplateApplication.errors ??
+              [];
+          }
+          const errors: Array<RightErrorRest> = r.templateApplication
+            .flatMap((t) => (t.errors != undefined ? t.errors : []))
+            .concat(exceptionErrors);
+          if (errors.length > 0) {
+            templateApplyError.value = true;
+            templateApplyErrorMsg.value = errors
+              .map((err) => err.message)
+              .join("\n-----------------------------------\n");
+            templateApplyErrorNumber.value = errors.length;
+          }
+          updateTemplateOverview();
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
+        });
     };
 
     const closeApplyErrorMsg = () => {
@@ -268,12 +252,12 @@ export default defineComponent({
     const lastModifiedTemplateName = ref("");
     const childTemplateAdded = (template: RightRest) => {
       lastModifiedTemplateName.value =
-          template.templateName == undefined ? "invalid" : template.templateName;
+        template.templateName == undefined ? "invalid" : template.templateName;
       successMsgIsActive.value = true;
       successMsg.value =
-          "Template " +
-          lastModifiedTemplateName.value +
-          " erfolgreich hinzugefügt.";
+        "Template " +
+        lastModifiedTemplateName.value +
+        " erfolgreich hinzugefügt.";
       updateTemplateOverview();
     };
 
@@ -282,7 +266,7 @@ export default defineComponent({
       lastModifiedTemplateName.value = templateName;
       successMsgIsActive.value = true;
       successMsg.value =
-          "Template " + lastModifiedTemplateName.value + " erfolgreich gelöscht.";
+        "Template " + lastModifiedTemplateName.value + " erfolgreich gelöscht.";
       updateTemplateOverview();
     };
 
@@ -290,7 +274,9 @@ export default defineComponent({
       lastModifiedTemplateName.value = templateName;
       successMsgIsActive.value = true;
       successMsg.value =
-          "Template '" + lastModifiedTemplateName.value + "' erfolgreich editiert.";
+        "Template '" +
+        lastModifiedTemplateName.value +
+        "' erfolgreich editiert.";
       updateTemplateOverview();
       closeTemplateEditDialog();
     };
@@ -301,7 +287,7 @@ export default defineComponent({
     };
 
     const tooltipEditText = computed(() => {
-      if(userStore.isLoggedIn){
+      if (userStore.isLoggedIn) {
         return "Bearbeiten";
       } else {
         return "Anzeigen";
@@ -311,22 +297,26 @@ export default defineComponent({
     /**
      * Specific column logic
      */
-    const datePrettyPrint: (date: (Date | undefined)) => string = (date: Date | undefined) => {
-      if(date == undefined){
-        return ""
+    const datePrettyPrint: (date: Date | undefined) => string = (
+      date: Date | undefined,
+    ) => {
+      if (date == undefined) {
+        return "";
       } else {
         return date_utils.dateToIso8601(date);
       }
-    }
+    };
 
     const currentDate = ref<Date>(new Date());
-    const isTemplateValid: (right: RightRest) => boolean = (right: RightRest) => {
+    const isTemplateValid: (right: RightRest) => boolean = (
+      right: RightRest,
+    ) => {
       let endDate: Date;
-      if(right.endDate != undefined){
+      if (right.endDate != undefined) {
         endDate = new Date(right.endDate);
         endDate.setDate(endDate.getDate() + 1);
       }
-      if(currentDate.value > right.startDate && right.endDate == undefined ){
+      if (currentDate.value > right.startDate && right.endDate == undefined) {
         return true;
       }
       return currentDate.value > right.startDate && currentDate.value < endDate;
@@ -339,15 +329,19 @@ export default defineComponent({
       if (rightId != undefined && templateName != undefined) {
         emit("getItemsByRightId", rightId, templateName);
       } else {
-        console.log("Error: RightId or TemplateName where undefined: RightId: "
-            + rightId + "; Template Name: " + templateName);
+        console.log(
+          "Error: RightId or TemplateName where undefined: RightId: " +
+            rightId +
+            "; Template Name: " +
+            templateName,
+        );
       }
     };
 
     /**
      * Test Template application
      */
-    const currentTemplateApplicationResult = ref({} as TemplateApplicationRest)
+    const currentTemplateApplicationResult = ref({} as TemplateApplicationRest);
     const dashboardViewActivated = ref(false);
     const testId: Ref<string | undefined> = ref(undefined);
 
@@ -359,31 +353,26 @@ export default defineComponent({
     };
     const dialogSimulationResults = ref(false);
     const dryRunTemplate = (template: RightRest) => {
-      if (template.rightId == undefined){
+      if (template.rightId == undefined) {
         return;
       }
 
       templateApi
-          .applyTemplates(
-              [template.rightId],
-              false,
-              false,
-              true,
-          )
-          .then((r: TemplateApplicationsRest) => {
-            if (r.templateApplication.length == 0){
-              return;
-            }
-            testId.value = r.templateApplication[0].testId;
-            currentTemplateApplicationResult.value = r.templateApplication[0];
-            dialogSimulationResults.value = true;
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
+        .applyTemplates([template.rightId], false, false, true)
+        .then((r: TemplateApplicationsRest) => {
+          if (r.templateApplication.length == 0) {
+            return;
+          }
+          testId.value = r.templateApplication[0].testId;
+          currentTemplateApplicationResult.value = r.templateApplication[0];
+          dialogSimulationResults.value = true;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
+        });
     };
 
     const closeDialogSimulationResult = () => {
@@ -405,8 +394,8 @@ export default defineComponent({
     });
 
     watch(dashboardViewActivated, (currentValue) => {
-      if(!currentValue && testId.value != undefined){
-        rightErrorApi.deleteRightErrorsByTestId(testId.value)
+      if (!currentValue && testId.value != undefined) {
+        rightErrorApi.deleteRightErrorsByTestId(testId.value);
       }
     });
 
@@ -481,13 +470,14 @@ export default defineComponent({
 </style>
 <template>
   <v-dialog
-      max-width="500px"
-      :retain-focus="false"
-      v-model="dialogSimulationResults"
+    max-width="500px"
+    :retain-focus="false"
+    v-model="dialogSimulationResults"
   >
     <v-card>
       <div class="d-flex align-center justify-space-between">
-        <v-card-title>Ergebnisse Simulation
+        <v-card-title
+          >Ergebnisse Simulation
           <v-spacer></v-spacer>
         </v-card-title>
         <v-btn @click="closeDialogSimulationResult" icon="mdi-close"></v-btn>
@@ -495,19 +485,23 @@ export default defineComponent({
       <v-card-text>
         <v-row>
           <v-col>
-            {{info.constructApplicationInfoText(currentTemplateApplicationResult)}}
+            {{
+              info.constructApplicationInfoText(
+                currentTemplateApplicationResult,
+              )
+            }}
           </v-col>
         </v-row>
         <v-row>
-          <v-col>Anzahl Fehler: {{currentTemplateApplicationResult.numberOfErrors}}</v-col>
+          <v-col
+            >Anzahl Fehler:
+            {{ currentTemplateApplicationResult.numberOfErrors }}</v-col
+          >
         </v-row>
         <v-row v-if="currentTemplateApplicationResult.numberOfErrors != 0">
           <v-col>
             Fehler in Dashboard ansehen:
-            <v-btn
-                @click="openDashboard"
-                color="blue darken-1"
-            >
+            <v-btn @click="openDashboard" color="blue darken-1">
               Hier klicken
             </v-btn>
           </v-col>
@@ -516,65 +510,59 @@ export default defineComponent({
     </v-card>
   </v-dialog>
   <v-dialog
-      v-model="dashboardViewActivated"
-      :retain-focus="false"
-      max-width="1000px"
+    v-model="dashboardViewActivated"
+    :retain-focus="false"
+    max-width="1000px"
   >
     <Dashboard
-        :test-id="testId"
-        v-on:dashboardClosed="closeDashboard"
+      :test-id="testId"
+      v-on:dashboardClosed="closeDashboard"
     ></Dashboard>
   </v-dialog>
   <v-card position="relative">
     <v-toolbar>
       <v-spacer></v-spacer>
-      <v-btn
-          icon="mdi-close"
-          @click="close"
-      ></v-btn>
+      <v-btn icon="mdi-close" @click="close"></v-btn>
     </v-toolbar>
     <v-container>
       <v-snackbar
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          v-model="successMsgIsActive"
-          color="success"
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="5000"
+        v-model="successMsgIsActive"
+        color="success"
       >
         {{ successMsg }}
       </v-snackbar>
       <v-snackbar
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          v-model="errorMsgIsActive"
-          color="error"
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="5000"
+        v-model="errorMsgIsActive"
+        color="error"
       >
         {{ errorMsg }}
       </v-snackbar>
-      <v-dialog
-          v-model="templateApplyError"
-          width="850px"
-          height="550px">
+      <v-dialog v-model="templateApplyError" width="850px" height="550px">
         <v-card>
           <v-card-title class="text-h5"
-          >Template Anwendung (teilweise) fehlgeschlagen</v-card-title
+            >Template Anwendung (teilweise) fehlgeschlagen</v-card-title
           >
           <v-card-text>
             Templates angewandt: {{ templateApplyItemsApplied }}<br />
             Anzahl Fehler: {{ templateApplyErrorNumber }}<br />
             Details zu den Fehlern:
             <v-textarea
-                :value="templateApplyErrorMsg"
-                rows="12"
-                readonly
-                background-color="red lighten-4"
-                color="black"
-                variant="outlined"
+              :value="templateApplyErrorMsg"
+              rows="12"
+              readonly
+              background-color="red lighten-4"
+              color="black"
+              variant="outlined"
             >
             </v-textarea>
           </v-card-text>
@@ -589,78 +577,74 @@ export default defineComponent({
       <v-card-title>
         Templates
         <v-progress-circular
-            v-if="isLoading"
-            color="blue darken-1"
-            indeterminate
-            class="ml-5"
+          v-if="isLoading"
+          color="blue darken-1"
+          indeterminate
+          class="ml-5"
         ></v-progress-circular>
       </v-card-title>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn
-            color="blue darken-1"
-            @click="createNewTemplate"
-            :disabled="!userStore.isLoggedIn"
-        >Neues Template anlegen
+          color="blue darken-1"
+          @click="createNewTemplate"
+          :disabled="!userStore.isLoggedIn"
+          >Neues Template anlegen
         </v-btn>
       </v-card-actions>
 
       <v-select
-          v-model="headersValueVSelect"
-          :items="headers"
-          label="Spaltenauswahl"
-          multiple
-          return-object
+        v-model="headersValueVSelect"
+        :items="headers"
+        label="Spaltenauswahl"
+        multiple
+        return-object
       >
         <template v-slot:selection="{ item, index }">
           <v-chip v-if="index === 0">
             <span>{{ item.title }}</span>
           </v-chip>
           <span v-if="index === 1" class="grey--text caption"
-          >(+{{ headersValueVSelect.length - 1 }} weitere)</span
+            >(+{{ headersValueVSelect.length - 1 }} weitere)</span
           >
         </template>
       </v-select>
 
       <v-text-field
-          v-model="searchTerm"
-          append-icon="mdi-magnify"
-          hide-details
-          label="Suche"
-          single-line
+        v-model="searchTerm"
+        append-icon="mdi-magnify"
+        hide-details
+        label="Suche"
+        single-line
       ></v-text-field>
       <v-data-table
-          :key="renderKey"
-          :headers="selectedHeaders"
-          :items="templateItems"
-          :search="searchTerm"
-          :sort-by.sync="sortBy"
-          :loading="isLoading"
-          item-value="templateName"
-          loading-text="Daten werden geladen... Bitte warten."
+        :key="renderKey"
+        :headers="selectedHeaders"
+        :items="templateItems"
+        :search="searchTerm"
+        :sort-by.sync="sortBy"
+        :loading="isLoading"
+        item-value="templateName"
+        loading-text="Daten werden geladen... Bitte warten."
       >
         <template v-slot:item.displayConnectedItems="{ item }">
           <v-btn
-              color="blue darken-1"
-              @click="emitGetItemsByRightId(item.rightId, item.templateName)"
-          >Alle verknüpften Items anzeigen
+            color="blue darken-1"
+            @click="emitGetItemsByRightId(item.rightId, item.templateName)"
+            >Alle verknüpften Items anzeigen
           </v-btn>
         </template>
         <template v-slot:item.status="{ item }">
           <v-tooltip
-              v-if="isTemplateValid(item)"
-              location="bottom"
-              text="Aktuell gültiges Template"
+            v-if="isTemplateValid(item)"
+            location="bottom"
+            text="Aktuell gültiges Template"
           >
             <template v-slot:activator="{ props }">
-              <v-icon v-bind="props">
-                mdi-star
-              </v-icon>
+              <v-icon v-bind="props"> mdi-star </v-icon>
             </template>
           </v-tooltip>
-          <v-icon v-else class="invisible">
-            mdi-star
-          </v-icon>
+          <v-icon v-else class="invisible"> mdi-star </v-icon>
           <v-tooltip location="bottom" text="Entwurf">
             <template v-slot:activator="{ props }">
               <v-icon v-bind="props" v-if="item.lastAppliedOn == undefined">
@@ -671,11 +655,13 @@ export default defineComponent({
         </template>
         <template v-slot:item.applyTemplate="{ item }">
           <v-btn
-              v-if="item.exceptionOfId == undefined"
-              color="blue darken-1"
-              @click="applyTemplate(item)"
-              :disabled="!userStore.isLoggedIn || date_utils.isDateInPast(item.endDate)"
-          >Template anwenden</v-btn
+            v-if="item.exceptionOfId == undefined"
+            color="blue darken-1"
+            @click="applyTemplate(item)"
+            :disabled="
+              !userStore.isLoggedIn || date_utils.isDateInPast(item.endDate)
+            "
+            >Template anwenden</v-btn
           >
         </template>
         <template v-slot:item.isException="{ item }">
@@ -692,54 +678,49 @@ export default defineComponent({
             <template v-slot:activator="{ props }">
               <div v-bind="props" class="d-inline-block">
                 <v-icon
-                    class="tooltip-btn"
-                    small
-                    v-bind="props"
-                    @click="copyTemplate(item)"
-                    :disabled="!userStore.isLoggedIn"
+                  class="tooltip-btn"
+                  small
+                  v-bind="props"
+                  @click="copyTemplate(item)"
+                  :disabled="!userStore.isLoggedIn"
                 >
                   mdi-content-copy
                 </v-icon>
               </div>
             </template>
-            <span v-if="!userStore.isLoggedIn">
-              Kopieren
-            </span>
+            <span v-if="!userStore.isLoggedIn"> Kopieren </span>
             <span v-else>Kopieren</span>
           </v-tooltip>
           <v-tooltip location="bottom" :text="tooltipEditText">
             <template v-slot:activator="{ props }">
               <v-icon
-                  small
-                  v-bind="props"
-                  @click="editTemplate(item)"
-                  class="tooltip-btn"
-                  v-if="userStore.isLoggedIn"
+                small
+                v-bind="props"
+                @click="editTemplate(item)"
+                class="tooltip-btn"
+                v-if="userStore.isLoggedIn"
               >
                 mdi-pencil
               </v-icon>
               <v-icon
-                  small
-                  v-bind="props"
-                  @click="editTemplate(item)"
-                  class="tooltip-btn"
-                  v-else
+                small
+                v-bind="props"
+                @click="editTemplate(item)"
+                class="tooltip-btn"
+                v-else
               >
                 mdi-eye
               </v-icon>
             </template>
           </v-tooltip>
-          <v-tooltip
-              location="bottom"
-              text="Testen"
-          >
-            <template v-slot:activator="{ props }" >
+          <v-tooltip location="bottom" text="Testen">
+            <template v-slot:activator="{ props }">
               <div v-bind="props" class="d-inline-block">
                 <v-icon
-                    class="tooltip-btn"
-                    variant="text"
-                    @click="dryRunTemplate(item)"
-                    :disabled="!userStore.isLoggedIn"
+                  class="tooltip-btn"
+                  variant="text"
+                  @click="dryRunTemplate(item)"
+                  :disabled="!userStore.isLoggedIn"
                 >
                   mdi-alpha-t-box-outline
                 </v-icon>
@@ -749,36 +730,36 @@ export default defineComponent({
           </v-tooltip>
         </template>
         <template v-slot:item.startDate="{ item }">
-          {{ datePrettyPrint(item.startDate)}}
+          {{ datePrettyPrint(item.startDate) }}
         </template>
         <template v-slot:item.endDate="{ item }">
-          {{ datePrettyPrint(item.endDate)}}
+          {{ datePrettyPrint(item.endDate) }}
         </template>
       </v-data-table>
       <v-dialog
-          v-model="templateEditDialogActivated"
-          v-on:close="closeTemplateEditDialog"
-          :retain-focus="false"
-          max-width="1500px"
-          max-height="850px"
-          scrollable
-          persistent
+        v-model="templateEditDialogActivated"
+        v-on:close="closeTemplateEditDialog"
+        :retain-focus="false"
+        max-width="1500px"
+        max-height="850px"
+        scrollable
+        persistent
       >
         <RightsEditWrapper
-            :index="-1"
-            :isNewRight="false"
-            :isNewTemplate="isNew"
-            :reinit-counter="reinitCounter"
-            :is-exception-template="
+          :index="-1"
+          :isNewRight="false"
+          :isNewTemplate="isNew"
+          :reinit-counter="reinitCounter"
+          :is-exception-template="
             currentTemplate.exceptionOfId !== undefined &&
             currentTemplate.exceptionOfId != ''
           "
-            :rightId="currentTemplate.rightId"
-            :initialRight="templateDraft"
-            v-on:addTemplateSuccessful="childTemplateAdded"
-            v-on:deleteTemplateSuccessful="childTemplateDeleted"
-            v-on:editRightClosed="closeTemplateEditDialog"
-            v-on:updateTemplateSuccessful="childTemplateUpdated"
+          :rightId="currentTemplate.rightId"
+          :initialRight="templateDraft"
+          v-on:addTemplateSuccessful="childTemplateAdded"
+          v-on:deleteTemplateSuccessful="childTemplateDeleted"
+          v-on:editRightClosed="closeTemplateEditDialog"
+          v-on:updateTemplateSuccessful="childTemplateUpdated"
         ></RightsEditWrapper>
       </v-dialog>
     </v-container>

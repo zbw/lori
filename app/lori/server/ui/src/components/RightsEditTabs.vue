@@ -1,10 +1,24 @@
 <script lang="ts">
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import { RightRest } from "@/generated-sources/openapi";
-import {computed, ComputedRef, defineComponent, onMounted, PropType, Ref, ref, watch} from "vue";
-import {useUserStore} from "@/stores/user";
+import {
+  computed,
+  ComputedRef,
+  defineComponent,
+  onMounted,
+  PropType,
+  Ref,
+  ref,
+  watch,
+} from "vue";
+import { useUserStore } from "@/stores/user";
 import url from "@/utils/url";
-import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
+import {
+  RouteLocationNormalizedLoaded,
+  Router,
+  useRoute,
+  useRouter,
+} from "vue-router";
 import RightsEditWrapper from "@/components/RightsEditWrapper.vue";
 
 export default defineComponent({
@@ -24,7 +38,7 @@ export default defineComponent({
     licenceUrl: {
       type: String,
       required: false,
-    }
+    },
   },
   emits: ["deleteSuccessful", "tabDialogClosed", "updateSuccessful"],
   components: {
@@ -42,19 +56,19 @@ export default defineComponent({
     const unsavedChangesDialog = ref(false);
 
     // Router + Route
-    const router: Router = useRouter()
-    const route: RouteLocationNormalizedLoaded = useRoute()
+    const router: Router = useRouter();
+    const route: RouteLocationNormalizedLoaded = useRoute();
 
     // Methods
     const deleteSuccessful = (
-        index: number,
-        rightIdDeleted: string | undefined,
+      index: number,
+      rightIdDeleted: string | undefined,
     ) => {
       currentRights.value.splice(index, 1);
       renderKey.value += 1;
       lastDeletionSuccessful.value = true;
       lastDeletedRight.value =
-          rightIdDeleted != undefined ? rightIdDeleted : "";
+        rightIdDeleted != undefined ? rightIdDeleted : "";
       emit("deleteSuccessful", index);
     };
 
@@ -69,23 +83,21 @@ export default defineComponent({
     const closeTabDisregardChanges = () => {
       formStatus.value = Object.assign({} as Ref<Record<string, boolean>>);
       unsavedChangesDialog.value = false;
-      url.removeQueryParameters(
-          route,
-          router,
-          [url.QUERY_PARAMETER_RIGHT_ID, url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH],
-      );
+      url.removeQueryParameters(route, router, [
+        url.QUERY_PARAMETER_RIGHT_ID,
+        url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH,
+      ]);
       emit("tabDialogClosed");
     };
 
     const tabDialogClosed = () => {
-      if(Object.values(formStatus.value).includes(true)){
+      if (Object.values(formStatus.value).includes(true)) {
         unsavedChangesDialog.value = true;
       } else {
-        url.removeQueryParameters(
-            route,
-            router,
-            [url.QUERY_PARAMETER_RIGHT_ID, url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH],
-        );
+        url.removeQueryParameters(route, router, [
+          url.QUERY_PARAMETER_RIGHT_ID,
+          url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH,
+        ]);
         emit("tabDialogClosed");
       }
     };
@@ -125,59 +137,61 @@ export default defineComponent({
      */
     const userStore = useUserStore();
     const dialogTitle = computed(() => {
-      if (userStore.isLoggedIn){
-        return "Bearbeite Rechte für " + props.handle ;
+      if (userStore.isLoggedIn) {
+        return "Bearbeite Rechte für " + props.handle;
       } else {
-        return "Zeige Rechte an für " + props.handle ;
+        return "Zeige Rechte an für " + props.handle;
       }
     });
 
     function onTabClick(right: RightRest, index: number) {
-      url.removeQueryParameters(
-          route,
-          router,
-          [url.QUERY_PARAMETER_RIGHT_ID],
-      );
+      url.removeQueryParameters(route, router, [url.QUERY_PARAMETER_RIGHT_ID]);
       url.addQueryParameters(route, router, {
         [url.QUERY_PARAMETER_RIGHT_ID]: right?.rightId,
       });
     }
 
     const tab = ref(0);
-    watch(() => props.selectedRight, (currentValue: string, oldValue: string) => {
-      const preselectedIdx = props.rights.findIndex(
+    watch(
+      () => props.selectedRight,
+      (currentValue: string, oldValue: string) => {
+        const preselectedIdx = props.rights.findIndex(
           (e) => e.rightId === props.selectedRight,
-      );
-      if (preselectedIdx == -1){
-        tab.value = 0;
-        url.addQueryParameters(route, router, {
-          [url.QUERY_PARAMETER_RIGHT_ID]: props.rights[0].rightId,
-          [url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH]: 'hdl:' + props.handle,
-        });
-      } else {
-        tab.value = preselectedIdx;
-        url.addQueryParameters(route, router, {
-          [url.QUERY_PARAMETER_RIGHT_ID]: props.rights[preselectedIdx].rightId,
-          [url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH]: 'hdl:' + props.handle,
-        });
-      }
-    });
+        );
+        if (preselectedIdx == -1) {
+          tab.value = 0;
+          url.addQueryParameters(route, router, {
+            [url.QUERY_PARAMETER_RIGHT_ID]: props.rights[0].rightId,
+            [url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH]:
+              "hdl:" + props.handle,
+          });
+        } else {
+          tab.value = preselectedIdx;
+          url.addQueryParameters(route, router, {
+            [url.QUERY_PARAMETER_RIGHT_ID]:
+              props.rights[preselectedIdx].rightId,
+            [url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH]:
+              "hdl:" + props.handle,
+          });
+        }
+      },
+    );
 
     onMounted(() => {
       const preselectedIdx = props.rights.findIndex(
-          (e) => e.rightId === props.selectedRight,
+        (e) => e.rightId === props.selectedRight,
       );
-      if (preselectedIdx == -1){
+      if (preselectedIdx == -1) {
         tab.value = 0;
         url.addQueryParameters(route, router, {
           [url.QUERY_PARAMETER_RIGHT_ID]: props.rights[0].rightId,
-          [url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH]: 'hdl:' + props.handle,
+          [url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH]: "hdl:" + props.handle,
         });
       } else {
         tab.value = preselectedIdx;
         url.addQueryParameters(route, router, {
           [url.QUERY_PARAMETER_RIGHT_ID]: props.rights[preselectedIdx].rightId,
-          [url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH]: 'hdl:' + props.handle,
+          [url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH]: "hdl:" + props.handle,
         });
       }
     });
@@ -214,21 +228,18 @@ export default defineComponent({
     <v-toolbar :key="renderKey" color="cyan" dark flat>
       <v-toolbar-title> {{ dialogTitle }} </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn
-          icon="mdi-close"
-          @click="tabDialogClosed"
-      ></v-btn>
+      <v-btn icon="mdi-close" @click="tabDialogClosed"></v-btn>
       <template v-slot:extension>
         <v-tabs
-            v-model="tab"
-            align-with-title
-            show-arrows
-            slider-color="yellow"
+          v-model="tab"
+          align-with-title
+          show-arrows
+          slider-color="yellow"
         >
           <v-tab
-              v-for="(r, index) in currentRights"
-              :key="r.rightId"
-              @click="onTabClick(r, index)"
+            v-for="(r, index) in currentRights"
+            :key="r.rightId"
+            @click="onTabClick(r, index)"
           >
             <v-icon v-if="r.isTemplate">mdi-note-multiple</v-icon>
             <v-icon v-else>mdi-note-outline</v-icon>
@@ -241,27 +252,27 @@ export default defineComponent({
 
     <v-window v-model="tab">
       <v-alert
-          v-model="lastDeletionSuccessful"
-          closable
-          type="success"
-          @close="resetLastDeletionSuccessful"
+        v-model="lastDeletionSuccessful"
+        closable
+        type="success"
+        @close="resetLastDeletionSuccessful"
       >
         Rechteinformation {{ lastDeletedRight }} erfolgreich gelöscht für Item
         {{ handle }}.
       </v-alert>
       <v-window-item v-for="(item, index) in currentRights" :key="item.rightId">
         <RightsEditWrapper
-            :index="index"
-            :isNewRight="false"
-            :isNewTemplate="false"
-            :handle="handle"
-            :rightId="item.rightId"
-            :isTabEntry="true"
-            :licenceUrl="licenceUrl"
-            v-on:deleteSuccessful="deleteSuccessful"
-            v-on:editRightClosed="tabDialogClosed"
-            v-on:hasFormChanged="setFormStatus"
-            v-on:updateSuccessful="updateSuccessful"
+          :index="index"
+          :isNewRight="false"
+          :isNewTemplate="false"
+          :handle="handle"
+          :rightId="item.rightId"
+          :isTabEntry="true"
+          :licenceUrl="licenceUrl"
+          v-on:deleteSuccessful="deleteSuccessful"
+          v-on:editRightClosed="tabDialogClosed"
+          v-on:hasFormChanged="setFormStatus"
+          v-on:updateSuccessful="updateSuccessful"
         ></RightsEditWrapper>
         <v-dialog v-model="unsavedChangesDialog" max-width="500px">
           <v-card>
@@ -271,14 +282,10 @@ export default defineComponent({
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn
-                  @click="closeUnsavedChangesDialog"
-                  color="blue darken-1"
-              >Abbrechen
+              <v-btn @click="closeUnsavedChangesDialog" color="blue darken-1"
+                >Abbrechen
               </v-btn>
-              <v-btn
-                  color="error"
-                  @click="closeTabDisregardChanges">
+              <v-btn color="error" @click="closeTabDisregardChanges">
                 Änderungen verwerfen
               </v-btn>
               <v-spacer></v-spacer>
