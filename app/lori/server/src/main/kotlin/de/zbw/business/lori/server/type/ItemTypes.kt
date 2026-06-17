@@ -8,6 +8,7 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_CREAT
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_CREATED_ON
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DELETED
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DOI
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONBIZID
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ISBN
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ISSN
@@ -94,6 +95,7 @@ data class ItemMetadata(
                 dateToString(createdOn),
                 deleted.toString(),
                 listToString(pids),
+                econbizId,
                 handle,
                 listToString(isbn),
                 listToString(issn),
@@ -145,6 +147,7 @@ data class ItemMetadata(
                 "$COLUMN_METADATA_CREATED_ON," +
                 "$COLUMN_METADATA_DELETED," +
                 "$COLUMN_METADATA_DOI," +
+                "$COLUMN_METADATA_ECONBIZID," +
                 "$COLUMN_METADATA_HANDLE," +
                 "$COLUMN_METADATA_ISBN," +
                 "$COLUMN_METADATA_ISSN," +
