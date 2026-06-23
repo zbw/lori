@@ -16,6 +16,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.utils.TimezoneUtil.utcOffsetDateTimeToBerlinDate
 import io.ktor.client.HttpClient
+import io.ktor.client.call.NoTransformationFoundException
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
@@ -55,6 +56,7 @@ import org.apache.logging.log4j.Logger
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import kotlin.math.ceil
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Connector for the Digital Archive (DA).
@@ -399,13 +401,25 @@ class DAConnector(
                 return ApiResponse.Error.HttpError(e.response.status.value, e.errorBody())
             } catch (e: IOException) {
                 if (currentAttempt < retries - 1) {
-                    delay(delayMillis)
+                    delay(delayMillis.milliseconds)
                     currentAttempt++
+                    LOG.warn("IOException: Retrying request ${currentAttempt + 1} time")
+                } else {
+                    return ApiResponse.Error.NetworkError(e.message ?: "No message")
+                }
+            } catch (e: NoTransformationFoundException) {
+                if (currentAttempt < retries - 1) {
+                    delay(delayMillis.milliseconds)
+                    currentAttempt++
+                    LOG.warn("NoTransformationFoundException: Retrying request ${currentAttempt + 1} time")
                 } else {
                     return ApiResponse.Error.NetworkError(e.message ?: "No message")
                 }
             } catch (e: SerializationException) {
                 return ApiResponse.Error.SerializationError(e.message ?: "No message")
+            } catch (e: Exception) {
+                LOG.error("Unexpected request error", e)
+                throw e
             }
         }
         throw IllegalStateException("Unexpected error") // should never happen
@@ -425,7 +439,7 @@ class DAConnector(
         // New entries in this collection will receive default right entries
         const val COLLECTION_WITH_DEFAULT_ENTRIES = "11159/17"
         private const val HANDLE_URL = "http://hdl.handle.net/"
-        internal val LOG: Logger = LogManager.getLogger(DAConnector::class.java)
+        val LOG: Logger = LogManager.getLogger(DAConnector::class.java)
 
         private const val MAX_PARALLEL_CONNECTIONS = 5
         private val semaphore = Semaphore(MAX_PARALLEL_CONNECTIONS)
