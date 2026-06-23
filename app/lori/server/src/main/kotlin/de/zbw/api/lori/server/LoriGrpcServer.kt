@@ -399,37 +399,42 @@ class LoriGrpcServer(
         semaphore: Semaphore,
         validationErrorMap: MutableMap<MetadataValidationError, List<String>>,
     ): CommunityImport? {
-        semaphore.acquire()
-        LOG.info("Start importing community $communityId")
-        val daCommunity: DACommunity = daConnector.getCommunityById(token, communityId) ?: return null
-        val collectionsImported: List<CollectionImport> =
-            daConnector.importAllCollectionsOfCommunity(
-                token,
-                daCommunity,
-                validationErrorMap,
-            )
-        semaphore.release()
-        LOG.info("Finished importing community $communityId")
-        return collectionsImported
-            .fold(
-                CommunityImport(
-                    communityId = communityId,
-                    importsExpected = 0,
-                    importsReceived = 0,
-                ),
-            ) { communityImport: CommunityImport, collectionImport: CollectionImport ->
-                communityImport.copy(
-                    importsExpected = communityImport.importsExpected + collectionImport.importsExpected,
-                    importsReceived = communityImport.importsReceived + collectionImport.importsReceived,
+        try {
+            semaphore.acquire()
+            LOG.info("Start importing community $communityId")
+            val daCommunity: DACommunity = daConnector.getCommunityById(token, communityId) ?: return null
+            val collectionsImported: List<CollectionImport> =
+                daConnector.importAllCollectionsOfCommunity(
+                    token,
+                    daCommunity,
+                    validationErrorMap,
                 )
-            }.also {
-                if (it.importsReceived < it.importsExpected) {
-                    LOG.warn(
-                        "Community-Id $communityId:" +
-                            " Not all items were imported. Only ${it.importsReceived} out of ${it.importsExpected} were imported.",
+            LOG.info("Finished importing community $communityId")
+            return collectionsImported
+                .fold(
+                    CommunityImport(
+                        communityId = communityId,
+                        importsExpected = 0,
+                        importsReceived = 0,
+                    ),
+                ) { communityImport: CommunityImport, collectionImport: CollectionImport ->
+                    communityImport.copy(
+                        importsExpected = communityImport.importsExpected + collectionImport.importsExpected,
+                        importsReceived = communityImport.importsReceived + collectionImport.importsReceived,
                     )
+                }.also {
+                    if (it.importsReceived < it.importsExpected) {
+                        LOG.warn(
+                            "Community-Id $communityId:" +
+                                " Not all items were imported. Only ${it.importsReceived} out of ${it.importsExpected} were imported.",
+                        )
+                    }
                 }
-            }
+        } catch (e: Exception) {
+            throw e
+        } finally {
+            semaphore.release()
+        }
     }
 
     companion object {
