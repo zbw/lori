@@ -26,6 +26,7 @@ class GenericJobDBTest : DatabaseTest() {
     private val jobDB =
         DatabaseConnector(
             connectionPool = ConnectionPool(testDataSource),
+            batchConnectionPool = ConnectionPool(testDataSource),
             tracer = OpenTelemetry.noop().getTracer("foo"),
         ).genericJobDB
 

@@ -5,8 +5,13 @@ import { useVuelidate } from "@vuelidate/core";
 import { useDialogsStore } from "@/stores/dialogs";
 import date_utils from "@/utils/date_utils";
 import metadata_utils from "@/utils/metadata_utils";
-import {useUserStore} from "@/stores/user";
-import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
+import { useUserStore } from "@/stores/user";
+import {
+  RouteLocationNormalizedLoaded,
+  Router,
+  useRoute,
+  useRouter,
+} from "vue-router";
 import url from "@/utils/url";
 
 export default defineComponent({
@@ -25,13 +30,14 @@ export default defineComponent({
     };
 
     const tempEventCheckForInput: (
-        value: string,
-        siblings: FormState,
+      value: string,
+      siblings: FormState,
     ) => boolean = (value: string, siblings: FormState) => {
       return !(
-          ((value == "startDate" || value == "endDate") &&
-              searchStore.temporalEventState.startDateOrEndDateFormattedValue != "") ||
-          siblings.tempEventInput != undefined
+        ((value == "startDate" || value == "endDate") &&
+          searchStore.temporalEventState.startDateOrEndDateFormattedValue !=
+            "") ||
+        siblings.tempEventInput != undefined
       );
     };
 
@@ -45,8 +51,8 @@ export default defineComponent({
     const errorTempEventInput = computed(() => {
       const errors: Array<string> = [];
       if (
-          searchStore.temporalEventState.startDateOrEndDateFormattedValue == "" ||
-          startDateOrEndDate.value == undefined
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue == "" ||
+        startDateOrEndDate.value == undefined
       ) {
         errors.push("Eintrag wird benötigt");
       }
@@ -56,19 +62,18 @@ export default defineComponent({
     const errorTempEventStartEnd = computed(() => {
       const errors: Array<string> = [];
       if (
-          !v$.value.startDateOrEndDateOption.$invalid &&
-          searchStore.temporalEventState.startDateOrEndDateFormattedValue != undefined &&
-          searchStore.temporalEventState.startDateOrEndDateFormattedValue != ""
+        !v$.value.startDateOrEndDateOption.$invalid &&
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue !=
+          undefined &&
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue != ""
       ) {
         errors.push("Wähle eine dieser Optionen aus");
       }
       return errors;
     });
 
-
-
-    const router: Router = useRouter()
-    const route: RouteLocationNormalizedLoaded = useRoute()
+    const router: Router = useRouter();
+    const route: RouteLocationNormalizedLoaded = useRoute();
 
     const parseAccessState = (accessState: string, count: number) => {
       switch (accessState.toLowerCase()) {
@@ -82,7 +87,7 @@ export default defineComponent({
     };
     const parsePublicationType = (pubType: string, count: number) => {
       return (
-          metadata_utils.prettyPrintPublicationType(pubType) + " (" + count + ")"
+        metadata_utils.prettyPrintPublicationType(pubType) + " (" + count + ")"
       );
     };
 
@@ -91,7 +96,7 @@ export default defineComponent({
     };
 
     const ppLicenceUrl = (licenceUrl: string, count: number) => {
-      if (licenceUrl == 'andere'){
+      if (licenceUrl == "andere") {
         return "Andere (" + count + ")";
       } else {
         return licenceUrl + " (" + count + ")";
@@ -115,7 +120,12 @@ export default defineComponent({
     };
 
     const ppNoLegalRisk = (count: number) => {
-      return "Anwendbarkeit Urheberrechtschranke ohne vertragsrechtliches Risiko " + "(" + count + ")";
+      return (
+        "Anwendbarkeit Urheberrechtschranke ohne vertragsrechtliches Risiko " +
+        "(" +
+        count +
+        ")"
+      );
     };
 
     /**
@@ -132,7 +142,7 @@ export default defineComponent({
     const errorFetchBackendData = ref("");
     const emitGetAccessStateOnDateSearch = () => {
       emit("getAccessStatesOnDate");
-    }
+    };
 
     /**
      * Menu interactions.
@@ -144,7 +154,8 @@ export default defineComponent({
 
     const startDateOrEndDateEntered = () => {
       if (startDateOrEndDate.value != undefined) {
-        searchStore.temporalEventState.startDateOrEndDateFormattedValue = date_utils.dateToIso8601(startDateOrEndDate.value);
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue =
+          date_utils.dateToIso8601(startDateOrEndDate.value);
       } else {
         searchStore.temporalEventState.startDateOrEndDateFormattedValue = "";
       }
@@ -156,7 +167,8 @@ export default defineComponent({
 
     const accessStateDateEntered = () => {
       if (accessStateDate.value != undefined) {
-        searchStore.accessStateOnDateState.dateValueFormatted = date_utils.dateToIso8601(accessStateDate.value);
+        searchStore.accessStateOnDateState.dateValueFormatted =
+          date_utils.dateToIso8601(accessStateDate.value);
       } else {
         searchStore.accessStateOnDateState.dateValueFormatted = "";
       }
@@ -180,7 +192,9 @@ export default defineComponent({
 
     const temporalValidOnEntered = () => {
       if (temporalValidOn.value != undefined) {
-        searchStore.temporalValidOnFormatted = date_utils.dateToIso8601(temporalValidOn.value);
+        searchStore.temporalValidOnFormatted = date_utils.dateToIso8601(
+          temporalValidOn.value,
+        );
       } else {
         searchStore.temporalValidOnFormatted = "";
       }
@@ -201,7 +215,9 @@ export default defineComponent({
 
     const storageDateFromEntered = () => {
       if (storageDateFromDate.value != undefined) {
-        searchStore.storageDateFromFormatted = date_utils.dateToIso8601(storageDateFromDate.value);
+        searchStore.storageDateFromFormatted = date_utils.dateToIso8601(
+          storageDateFromDate.value,
+        );
       } else {
         searchStore.storageDateFromFormatted = "";
       }
@@ -210,7 +226,9 @@ export default defineComponent({
 
     const storageDateToEntered = () => {
       if (storageDateToDate.value != undefined) {
-        searchStore.storageDateToFormatted = date_utils.dateToIso8601(storageDateToDate.value);
+        searchStore.storageDateToFormatted = date_utils.dateToIso8601(
+          storageDateToDate.value,
+        );
       } else {
         searchStore.storageDateToFormatted = "";
       }
@@ -238,15 +256,18 @@ export default defineComponent({
     };
 
     const emitSearchStartPublicationYear = (date: string) => {
-      if (date.length == 4 || date.length == 0){
+      if (date.length == 4 || date.length == 0) {
         emit("startSearch");
       }
     };
 
     const emitSearchStartAccessStateOn = () => {
-      if (searchStore.accessStateOnDateState.dateValueFormatted != undefined &&
-          searchStore.accessStateOnDateState.dateValueFormatted != "" &&
-          searchStore.accessStateOnDateIdx.filter((e) => e != undefined).length == 1){
+      if (
+        searchStore.accessStateOnDateState.dateValueFormatted != undefined &&
+        searchStore.accessStateOnDateState.dateValueFormatted != "" &&
+        searchStore.accessStateOnDateIdx.filter((e) => e != undefined).length ==
+          1
+      ) {
         emit("startSearch");
       }
     };
@@ -254,13 +275,13 @@ export default defineComponent({
     /**
      * Lazy loading
      */
-        // Series
+    // Series
     const seriesToShow = computed(() => {
-          if (seriesPerPage.value == 20) {
-            rerenderId.value += 1;
-          }
-          return searchStore.seriesReceived.slice(0, seriesPerPage.value)
-        });
+      if (seriesPerPage.value == 20) {
+        rerenderId.value += 1;
+      }
+      return searchStore.seriesReceived.slice(0, seriesPerPage.value);
+    });
     const isSeriesGroupOpen = ref(false); // Track if the group is open
     const isSeriesLoading = ref(false); // Prevent multiple loads
     const seriesPerPage = ref(20); // Number of items to load per scroll
@@ -268,7 +289,8 @@ export default defineComponent({
     const scrollWrapperSeries = ref<HTMLElement | null>(null); // Scroll wrapper ref
     const handleScrollSeries = (event: Event) => {
       if (scrollWrapperSeries.value) {
-        const { scrollHeight, scrollTop, clientHeight } = scrollWrapperSeries.value;
+        const { scrollHeight, scrollTop, clientHeight } =
+          scrollWrapperSeries.value;
         // If the user has scrolled to the bottom
         let diff = Math.abs(clientHeight - (scrollHeight - scrollTop));
         if (diff < 3) {
@@ -288,7 +310,7 @@ export default defineComponent({
 
     // PaketSigel
     const sigelToShow = computed(() => {
-      return searchStore.paketSigelIdReceived.slice(0, sigelPerPage.value)
+      return searchStore.paketSigelIdReceived.slice(0, sigelPerPage.value);
     });
     const isSigelGroupOpen = ref(false); // Track if the group is open
     const isSigelLoading = ref(false); // Prevent multiple loads
@@ -296,7 +318,8 @@ export default defineComponent({
     const scrollWrapperSigel = ref<HTMLElement | null>(null); // Scroll wrapper ref
     const handleScrollSigel = (event: Event) => {
       if (scrollWrapperSigel.value) {
-        const { scrollHeight, scrollTop, clientHeight } = scrollWrapperSigel.value;
+        const { scrollHeight, scrollTop, clientHeight } =
+          scrollWrapperSigel.value;
         // If the user has scrolled to the bottom
         let diff = Math.abs(clientHeight - (scrollHeight - scrollTop));
         if (diff < 3) {
@@ -316,7 +339,7 @@ export default defineComponent({
 
     // ZDB-Ids
     const zdbToShow = computed(() => {
-      return searchStore.zdbIdReceived.slice(0, zdbPerPage.value)
+      return searchStore.zdbIdReceived.slice(0, zdbPerPage.value);
     });
     const isZdbGroupOpen = ref(false); // Track if the group is open
     const isZdbLoading = ref(false); // Prevent multiple loads
@@ -324,7 +347,8 @@ export default defineComponent({
     const scrollWrapperZdb = ref<HTMLElement | null>(null); // Scroll wrapper ref
     const handleScrollZdb = (event: Event) => {
       if (scrollWrapperZdb.value) {
-        const { scrollHeight, scrollTop, clientHeight } = scrollWrapperZdb.value;
+        const { scrollHeight, scrollTop, clientHeight } =
+          scrollWrapperZdb.value;
         // If the user has scrolled to the bottom
         let diff = Math.abs(clientHeight - (scrollHeight - scrollTop));
         if (diff < 3) {
@@ -344,7 +368,7 @@ export default defineComponent({
 
     // Licence-URL
     const licenceToShow = computed(() => {
-      return searchStore.licenceUrlReceived.slice(0, licencePerPage.value)
+      return searchStore.licenceUrlReceived.slice(0, licencePerPage.value);
     });
     const isLicenceGroupOpen = ref(false); // Track if the group is open
     const isLicenceLoading = ref(false); // Prevent multiple loads
@@ -352,7 +376,8 @@ export default defineComponent({
     const scrollWrapperLicence = ref<HTMLElement | null>(null); // Scroll wrapper ref
     const handleScrollLicence = (event: Event) => {
       if (scrollWrapperLicence.value) {
-        const { scrollHeight, scrollTop, clientHeight } = scrollWrapperLicence.value;
+        const { scrollHeight, scrollTop, clientHeight } =
+          scrollWrapperLicence.value;
         // If the user has scrolled to the bottom
         let diff = Math.abs(clientHeight - (scrollHeight - scrollTop));
         if (diff < 3) {
@@ -462,24 +487,32 @@ export default defineComponent({
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
                 <v-list-item
-                    v-bind="props"
-                    title="Publikationsjahr"
+                  v-bind="props"
+                  title="Publikationsjahr"
                 ></v-list-item>
               </template>
               <v-list-item>
                 <v-row>
                   <v-col cols="6">
                     <v-text-field
-                        label="Von"
-                        v-model="searchStore.publicationYearFrom"
-                        @update:modelValue="emitSearchStartPublicationYear(searchStore.publicationYearFrom)"
+                      label="Von"
+                      v-model="searchStore.publicationYearFrom"
+                      @update:modelValue="
+                        emitSearchStartPublicationYear(
+                          searchStore.publicationYearFrom,
+                        )
+                      "
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6">
                     <v-text-field
-                        label="Bis"
-                        v-model="searchStore.publicationYearTo"
-                        @update:modelValue="emitSearchStartPublicationYear(searchStore.publicationYearTo)"
+                      label="Bis"
+                      v-model="searchStore.publicationYearTo"
+                      @update:modelValue="
+                        emitSearchStartPublicationYear(
+                          searchStore.publicationYearTo,
+                        )
+                      "
                     ></v-text-field>
                   </v-col>
                 </v-row>
@@ -488,31 +521,33 @@ export default defineComponent({
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
                 <v-list-item
-                    v-bind="props"
-                    title="Publikationstyp"
+                  v-bind="props"
+                  title="Publikationstyp"
                 ></v-list-item>
               </template>
               <h6></h6>
               <v-list>
                 <v-list-item
-                    v-for="(item, i) in searchStore.publicationTypeReceived"
-                    :key="i"
-                    :value="item"
-                    color="primary"
-                    rounded="shaped"
+                  v-for="(item, i) in searchStore.publicationTypeReceived"
+                  :key="i"
+                  :value="item"
+                  color="primary"
+                  rounded="shaped"
                 >
                   <v-checkbox
-                      :label="parsePublicationType(item.publicationType, item.count)"
-                      hide-details
-                      class="pl-9 ml-4"
-                      v-model="searchStore.publicationTypeIdx[i]"
-                      :disabled="searchStore.facetSearchInProgress"
-                      @update:modelValue="emitSearchStart"
+                    :label="
+                      parsePublicationType(item.publicationType, item.count)
+                    "
+                    hide-details
+                    class="pl-9 ml-4"
+                    v-model="searchStore.publicationTypeIdx[i]"
+                    :disabled="searchStore.facetSearchInProgress"
+                    @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                   <v-divider
-                      :thickness="1"
-                      class="border-opacity-100"
-                      color="grey-lighten-1"
+                    :thickness="1"
+                    class="border-opacity-100"
+                    color="grey-lighten-1"
                   ></v-divider>
                 </v-list-item>
               </v-list>
@@ -523,31 +558,35 @@ export default defineComponent({
               </template>
               <h6></h6>
               <v-expand-transition>
-                <div ref="scrollWrapperSigel" @scroll="handleScrollSigel" style="max-height: 400px; overflow-y: auto;">
+                <div
+                  ref="scrollWrapperSigel"
+                  @scroll="handleScrollSigel"
+                  style="max-height: 400px; overflow-y: auto"
+                >
                   <v-virtual-scroll
-                      :items="sigelToShow"
-                      item-height="64"
-                      v-slot:default="{ item, index }"
-                      :items-per-page="sigelPerPage"
+                    :items="sigelToShow"
+                    item-height="64"
+                    v-slot:default="{ item, index }"
+                    :items-per-page="sigelPerPage"
                   >
                     <v-list-item
-                        :key="item.paketSigel + rerenderId"
-                        :value="item"
-                        color="primary"
-                        rounded="shaped"
+                      :key="item.paketSigel + rerenderId"
+                      :value="item"
+                      color="primary"
+                      rounded="shaped"
                     >
                       <v-checkbox
-                          :label="ppPaketSigel(item.paketSigel, item.count)"
-                          hide-details
-                          class="pl-9 ml-4"
-                          v-model="searchStore.paketSigelIdIdx[index]"
-                          :disabled="searchStore.facetSearchInProgress"
-                          @update:modelValue="emitSearchStart"
+                        :label="ppPaketSigel(item.paketSigel, item.count)"
+                        hide-details
+                        class="pl-9 ml-4"
+                        v-model="searchStore.paketSigelIdIdx[index]"
+                        :disabled="searchStore.facetSearchInProgress"
+                        @update:modelValue="emitSearchStart"
                       ></v-checkbox>
                       <v-divider
-                          :thickness="1"
-                          class="border-opacity-100"
-                          color="grey-lighten-1"
+                        :thickness="1"
+                        class="border-opacity-100"
+                        color="grey-lighten-1"
                       ></v-divider>
                     </v-list-item>
                   </v-virtual-scroll>
@@ -560,31 +599,35 @@ export default defineComponent({
               </template>
               <h6></h6>
               <v-expand-transition>
-                <div ref="scrollWrapperSeries" @scroll="handleScrollSeries" style="max-height: 400px; overflow-y: auto;">
+                <div
+                  ref="scrollWrapperSeries"
+                  @scroll="handleScrollSeries"
+                  style="max-height: 400px; overflow-y: auto"
+                >
                   <v-virtual-scroll
-                      :items="seriesToShow"
-                      item-height="64"
-                      v-slot:default="{ item, index }"
-                      :items-per-page="seriesPerPage"
+                    :items="seriesToShow"
+                    item-height="64"
+                    v-slot:default="{ item, index }"
+                    :items-per-page="seriesPerPage"
                   >
                     <v-list-item
-                        :key="item.series + rerenderId"
-                        :value="item"
-                        color="primary"
-                        rounded="shaped"
+                      :key="item.series + rerenderId"
+                      :value="item"
+                      color="primary"
+                      rounded="shaped"
                     >
                       <v-checkbox
-                          :label="ppZDBId(item.series, item.count)"
-                          hide-details
-                          class="pl-9 ml-4"
-                          :disabled="searchStore.facetSearchInProgress"
-                          v-model="searchStore.seriesIdx[index]"
-                          @update:modelValue="emitSearchStart"
+                        :label="ppZDBId(item.series, item.count)"
+                        hide-details
+                        class="pl-9 ml-4"
+                        :disabled="searchStore.facetSearchInProgress"
+                        v-model="searchStore.seriesIdx[index]"
+                        @update:modelValue="emitSearchStart"
                       ></v-checkbox>
                       <v-divider
-                          :thickness="1"
-                          class="border-opacity-100"
-                          color="grey-lighten-1"
+                        :thickness="1"
+                        class="border-opacity-100"
+                        color="grey-lighten-1"
                       ></v-divider>
                     </v-list-item>
                   </v-virtual-scroll>
@@ -597,31 +640,35 @@ export default defineComponent({
               </template>
               <h6></h6>
               <v-expand-transition>
-                <div ref="scrollWrapperZdb" @scroll="handleScrollZdb" style="max-height: 400px; overflow-y: auto;">
+                <div
+                  ref="scrollWrapperZdb"
+                  @scroll="handleScrollZdb"
+                  style="max-height: 400px; overflow-y: auto"
+                >
                   <v-virtual-scroll
-                      :items="zdbToShow"
-                      item-height="64"
-                      v-slot:default="{ item, index }"
-                      :items-per-page="zdbPerPage"
+                    :items="zdbToShow"
+                    item-height="64"
+                    v-slot:default="{ item, index }"
+                    :items-per-page="zdbPerPage"
                   >
                     <v-list-item
-                        :key="item.zdbId + rerenderId"
-                        :value="item"
-                        color="primary"
-                        rounded="shaped"
+                      :key="item.zdbId + rerenderId"
+                      :value="item"
+                      color="primary"
+                      rounded="shaped"
                     >
                       <v-checkbox
-                          :label="ppZDBId(item.zdbId, item.count)"
-                          hide-details
-                          class="pl-9 ml-4"
-                          v-model="searchStore.zdbIdIdx[index]"
-                          :disabled="searchStore.facetSearchInProgress"
-                          @update:modelValue="emitSearchStart"
+                        :label="ppZDBId(item.zdbId, item.count)"
+                        hide-details
+                        class="pl-9 ml-4"
+                        v-model="searchStore.zdbIdIdx[index]"
+                        :disabled="searchStore.facetSearchInProgress"
+                        @update:modelValue="emitSearchStart"
                       ></v-checkbox>
                       <v-divider
-                          :thickness="1"
-                          class="border-opacity-100"
-                          color="grey-lighten-1"
+                        :thickness="1"
+                        class="border-opacity-100"
+                        color="grey-lighten-1"
                       ></v-divider>
                     </v-list-item>
                   </v-virtual-scroll>
@@ -634,31 +681,35 @@ export default defineComponent({
               </template>
               <h6></h6>
               <v-expand-transition>
-                <div ref="scrollWrapperLicence" @scroll="handleScrollLicence" style="max-height: 400px; overflow-y: auto;">
+                <div
+                  ref="scrollWrapperLicence"
+                  @scroll="handleScrollLicence"
+                  style="max-height: 400px; overflow-y: auto"
+                >
                   <v-virtual-scroll
-                      :items="licenceToShow"
-                      item-height="64"
-                      v-slot:default="{ item, index }"
-                      :items-per-page="licencePerPage"
+                    :items="licenceToShow"
+                    item-height="64"
+                    v-slot:default="{ item, index }"
+                    :items-per-page="licencePerPage"
                   >
                     <v-list-item
-                        :key="item.licenceUrl + rerenderId"
-                        :value="item"
-                        color="primary"
-                        rounded="shaped"
+                      :key="item.licenceUrl + rerenderId"
+                      :value="item"
+                      color="primary"
+                      rounded="shaped"
                     >
                       <v-checkbox
-                          :label="ppLicenceUrl(item.licenceUrl, item.count)"
-                          hide-details
-                          class="pl-9 ml-4"
-                          v-model="searchStore.licenceUrlIdx[index]"
-                          :disabled="searchStore.facetSearchInProgress"
-                          @update:modelValue="emitSearchStart"
+                        :label="ppLicenceUrl(item.licenceUrl, item.count)"
+                        hide-details
+                        class="pl-9 ml-4"
+                        v-model="searchStore.licenceUrlIdx[index]"
+                        :disabled="searchStore.facetSearchInProgress"
+                        @update:modelValue="emitSearchStart"
                       ></v-checkbox>
                       <v-divider
-                          :thickness="1"
-                          class="border-opacity-100"
-                          color="grey-lighten-1"
+                        :thickness="1"
+                        class="border-opacity-100"
+                        color="grey-lighten-1"
                       ></v-divider>
                     </v-list-item>
                   </v-virtual-scroll>
@@ -667,36 +718,33 @@ export default defineComponent({
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
-                <v-list-item
-                    v-bind="props"
-                    title="Speicherdatum"
-                ></v-list-item>
+                <v-list-item v-bind="props" title="Speicherdatum"></v-list-item>
               </template>
               <v-list-item>
                 <v-row>
                   <v-col>
                     <v-menu
-                        :close-on-content-click="false"
-                        :location="'bottom'"
-                        v-model="isStorageDateFromMenuOpen"
+                      :close-on-content-click="false"
+                      :location="'bottom'"
+                      v-model="isStorageDateFromMenuOpen"
                     >
                       <template v-slot:activator="{ props }">
                         <v-text-field
-                            v-model="searchStore.storageDateFromFormatted"
-                            prepend-icon="mdi-calendar"
-                            v-bind="props"
-                            readonly
-                            clearable
-                            label="Von"
-                            @update:modelValue="emitSearchStart"
+                          v-model="searchStore.storageDateFromFormatted"
+                          prepend-icon="mdi-calendar"
+                          v-bind="props"
+                          readonly
+                          clearable
+                          label="Von"
+                          @update:modelValue="emitSearchStart"
                         ></v-text-field>
                       </template>
                       <v-date-picker
-                          v-model="storageDateFromDate"
-                          color="primary"
-                          first-day-of-week="1"
-                          @update:modelValue="storageDateFromEntered"
-                      ><template v-slot:header></template>
+                        v-model="storageDateFromDate"
+                        color="primary"
+                        first-day-of-week="1"
+                        @update:modelValue="storageDateFromEntered"
+                        ><template v-slot:header></template>
                       </v-date-picker>
                     </v-menu>
                   </v-col>
@@ -704,27 +752,27 @@ export default defineComponent({
                 <v-row>
                   <v-col>
                     <v-menu
-                        :close-on-content-click="false"
-                        :location="'bottom'"
-                        v-model="isStorageDateToMenuOpen"
+                      :close-on-content-click="false"
+                      :location="'bottom'"
+                      v-model="isStorageDateToMenuOpen"
                     >
                       <template v-slot:activator="{ props }">
                         <v-text-field
-                            v-model="searchStore.storageDateToFormatted"
-                            prepend-icon="mdi-calendar"
-                            v-bind="props"
-                            readonly
-                            clearable
-                            label="Bis"
-                            @update:modelValue="emitSearchStart"
+                          v-model="searchStore.storageDateToFormatted"
+                          prepend-icon="mdi-calendar"
+                          v-bind="props"
+                          readonly
+                          clearable
+                          label="Bis"
+                          @update:modelValue="emitSearchStart"
                         ></v-text-field>
                       </template>
                       <v-date-picker
-                          v-model="storageDateToDate"
-                          color="primary"
-                          first-day-of-week="1"
-                          @update:modelValue="storageDateToEntered"
-                      ><template v-slot:header></template>
+                        v-model="storageDateToDate"
+                        color="primary"
+                        first-day-of-week="1"
+                        @update:modelValue="storageDateToEntered"
+                        ><template v-slot:header></template>
                       </v-date-picker>
                     </v-menu>
                   </v-col>
@@ -747,85 +795,84 @@ export default defineComponent({
               <h6></h6>
               <v-list>
                 <v-list-item
-                    v-for="(item, i) in searchStore.accessStateReceived"
-                    :key="i"
-                    :value="item"
-                    color="primary"
-                    rounded="shaped"
+                  v-for="(item, i) in searchStore.accessStateReceived"
+                  :key="i"
+                  :value="item"
+                  color="primary"
+                  rounded="shaped"
                 >
                   <v-checkbox
-                      :label="parseAccessState(item.accessState, item.count)"
-                      hide-details
-                      class="pl-9 ml-4"
-                      :disabled="searchStore.facetSearchInProgress"
-                      v-model="searchStore.accessStateIdx[i]"
-                      @update:modelValue="emitSearchStart"
+                    :label="parseAccessState(item.accessState, item.count)"
+                    hide-details
+                    class="pl-9 ml-4"
+                    :disabled="searchStore.facetSearchInProgress"
+                    v-model="searchStore.accessStateIdx[i]"
+                    @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                   <v-divider
-                      :thickness="1"
-                      class="border-opacity-100"
-                      color="grey-lighten-1"
+                    :thickness="1"
+                    class="border-opacity-100"
+                    color="grey-lighten-1"
                   ></v-divider>
                 </v-list-item>
               </v-list>
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
-                <v-list-item
-                    v-bind="props"
-                    title="Access-Status am"
-                >
+                <v-list-item v-bind="props" title="Access-Status am">
                 </v-list-item>
               </template>
               <v-menu
-                  :location="'bottom'"
-                  :close-on-content-click="false"
-                  v-model="isAccessStateOnDateMenuOpen"
+                :location="'bottom'"
+                :close-on-content-click="false"
+                v-model="isAccessStateOnDateMenuOpen"
               >
                 <template v-slot:activator="{ props }">
                   <v-text-field
-                      v-model="searchStore.accessStateOnDateState.dateValueFormatted"
-                      prepend-icon="mdi-calendar"
-                      v-bind="props"
-                      readonly
-                      required
-                      clearable
-                      @update:modelValue="emitGetAccessStateOnDateSearch"
-                      @click:clear="emitSearchStart"
-                      :error-messages="errorFetchBackendData"
+                    v-model="
+                      searchStore.accessStateOnDateState.dateValueFormatted
+                    "
+                    prepend-icon="mdi-calendar"
+                    v-bind="props"
+                    readonly
+                    required
+                    clearable
+                    @update:modelValue="emitGetAccessStateOnDateSearch"
+                    @click:clear="emitSearchStart"
+                    :error-messages="errorFetchBackendData"
                   ></v-text-field>
                 </template>
                 <v-date-picker
-                    v-model="accessStateDate"
-                    color="primary"
-                    first-day-of-week="1"
-                    @update:modelValue="accessStateDateEntered"
-                ><template v-slot:header></template>
+                  v-model="accessStateDate"
+                  color="primary"
+                  first-day-of-week="1"
+                  @update:modelValue="accessStateDateEntered"
+                  ><template v-slot:header></template>
                 </v-date-picker>
               </v-menu>
               <h6></h6>
               <v-list>
                 <v-list-item
-                    v-for="(item, i) in searchStore.accessStateOnDateReceived"
-                    :key="i"
-                    :value="item"
-                    color="primary"
-                    rounded="shaped"
+                  v-for="(item, i) in searchStore.accessStateOnDateReceived"
+                  :key="i"
+                  :value="item"
+                  color="primary"
+                  rounded="shaped"
                 >
                   <v-checkbox
-                      :label="parseAccessState(item.accessState, item.count)"
-                      hide-details
-                      class="pl-9 ml-4"
-                      :disabled="searchStore.facetSearchInProgress"
-                      v-model="searchStore.accessStateOnDateIdx"
-                      :value="item.accessState"
-                      @click="singleSelectionAccessStateOnDate"
-                      @update:modelValue="emitSearchStartAccessStateOn"
+                    :label="parseAccessState(item.accessState, item.count)"
+                    hide-details
+                    class="pl-9 ml-4"
+                    :disabled="searchStore.facetSearchInProgress"
+                    v-model="searchStore.accessStateOnDateIdx"
+                    :value="item.accessState"
+                    @click="singleSelectionAccessStateOnDate"
+                    @update:modelValue="emitSearchStartAccessStateOn"
                   ></v-checkbox>
                   <v-divider
-                      :thickness="1"
-                      class="border-opacity-100"
-                      color="grey-lighten-1"
+                    :thickness="1"
+                    class="border-opacity-100"
+                    color="grey-lighten-1"
                   ></v-divider>
                 </v-list-item>
               </v-list>
@@ -833,101 +880,104 @@ export default defineComponent({
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
                 <v-list-item
-                    v-bind="props"
-                    title="Zeitliche Gültigkeit am"
+                  v-bind="props"
+                  title="Zeitliche Gültigkeit am"
                 ></v-list-item>
               </template>
               <v-menu
-                  :close-on-content-click="false"
-                  :location="'bottom'"
-                  v-model="isValidOnMenuOpen"
+                :close-on-content-click="false"
+                :location="'bottom'"
+                v-model="isValidOnMenuOpen"
               >
                 <template v-slot:activator="{ props }">
                   <v-text-field
-                      v-model="searchStore.temporalValidOnFormatted"
-                      prepend-icon="mdi-calendar"
-                      v-bind="props"
-                      readonly
-                      clearable
-                      @update:modelValue="emitSearchStart"
+                    v-model="searchStore.temporalValidOnFormatted"
+                    prepend-icon="mdi-calendar"
+                    v-bind="props"
+                    readonly
+                    clearable
+                    @update:modelValue="emitSearchStart"
                   ></v-text-field>
                 </template>
                 <v-date-picker
-                    v-model="temporalValidOn"
-                    color="primary"
-                    first-day-of-week="1"
-                    @update:modelValue="temporalValidOnEntered"
-                ><template v-slot:header></template>
+                  v-model="temporalValidOn"
+                  color="primary"
+                  first-day-of-week="1"
+                  @update:modelValue="temporalValidOnEntered"
+                  ><template v-slot:header></template>
                 </v-date-picker>
               </v-menu>
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
                 <v-list-item
-                    v-bind="props"
-                    title="Zeitliche Gültigkeit Ereignis"
+                  v-bind="props"
+                  title="Zeitliche Gültigkeit Ereignis"
                 >
                 </v-list-item>
               </template>
               <v-menu
-                  :location="'bottom'"
-                  :close-on-content-click="false"
-                  v-model="isStartEndDateMenuOpen"
+                :location="'bottom'"
+                :close-on-content-click="false"
+                v-model="isStartEndDateMenuOpen"
               >
                 <template v-slot:activator="{ props }">
                   <v-text-field
-                      v-model="searchStore.temporalEventState.startDateOrEndDateFormattedValue"
-                      prepend-icon="mdi-calendar"
-                      v-bind="props"
-                      readonly
-                      required
-                      clearable
-                      @change="v$.startDateOrEndDateFormattedValue.$touch()"
-                      @blur="v$.startDateOrEndDateFormattedValue.$touch()"
-                      :error-messages="errorTempEventInput"
-                      @update:modelValue="emitSearchStart"
+                    v-model="
+                      searchStore.temporalEventState
+                        .startDateOrEndDateFormattedValue
+                    "
+                    prepend-icon="mdi-calendar"
+                    v-bind="props"
+                    readonly
+                    required
+                    clearable
+                    @change="v$.startDateOrEndDateFormattedValue.$touch()"
+                    @blur="v$.startDateOrEndDateFormattedValue.$touch()"
+                    :error-messages="errorTempEventInput"
+                    @update:modelValue="emitSearchStart"
                   ></v-text-field>
                 </template>
                 <v-date-picker
-                    v-model="startDateOrEndDate"
-                    first-day-of-week="1"
-                    color="primary"
-                    @update:modelValue="startDateOrEndDateEntered"
-                ><template v-slot:header></template>
+                  v-model="startDateOrEndDate"
+                  first-day-of-week="1"
+                  color="primary"
+                  @update:modelValue="startDateOrEndDateEntered"
+                  ><template v-slot:header></template>
                   <v-spacer></v-spacer>
                 </v-date-picker>
               </v-menu>
               <v-item-group v-model="temporalEvent">
                 <v-item>
                   <v-checkbox
-                      label="Startdatum"
-                      class="pl-9 ml-4"
-                      :disabled="searchStore.facetSearchInProgress"
-                      hide-details
-                      v-model="
+                    label="Startdatum"
+                    class="pl-9 ml-4"
+                    :disabled="searchStore.facetSearchInProgress"
+                    hide-details
+                    v-model="
                       searchStore.temporalEventState.startDateOrEndDateOption
                     "
-                      value="startDate"
-                      :error-messages="errorTempEventStartEnd"
-                      @update:modelValue="emitSearchStart"
+                    value="startDate"
+                    :error-messages="errorTempEventStartEnd"
+                    @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                 </v-item>
                 <v-divider
-                    :thickness="1"
-                    class="border-opacity-100"
-                    color="grey-lighten-1"
+                  :thickness="1"
+                  class="border-opacity-100"
+                  color="grey-lighten-1"
                 ></v-divider>
                 <v-item>
                   <v-checkbox
-                      label="Enddatum"
-                      class="pl-9 ml-4"
-                      :disabled="searchStore.facetSearchInProgress"
-                      v-model="
+                    label="Enddatum"
+                    class="pl-9 ml-4"
+                    :disabled="searchStore.facetSearchInProgress"
+                    v-model="
                       searchStore.temporalEventState.startDateOrEndDateOption
                     "
-                      :error-messages="errorTempEventStartEnd"
-                      value="endDate"
-                      @update:modelValue="emitSearchStart"
+                    :error-messages="errorTempEventStartEnd"
+                    value="endDate"
+                    @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                 </v-item>
               </v-item-group>
@@ -935,61 +985,63 @@ export default defineComponent({
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
                 <v-list-item
-                    v-bind="props"
-                    title="Formale Regelung"
+                  v-bind="props"
+                  title="Formale Regelung"
                 ></v-list-item>
               </template>
               <h6></h6>
               <v-checkbox
-                  v-if="searchStore.licenceContracts > 0"
-                  :label=ppLicenceContracts(searchStore.licenceContracts)
-                  :disabled="searchStore.facetSearchInProgress"
-                  hide-details
-                  class="pl-9 ml-4"
-                  v-model="searchStore.formalRuleLicenceContract"
-                  @update:modelValue="emitSearchStart"
+                v-if="searchStore.licenceContracts > 0"
+                :label="ppLicenceContracts(searchStore.licenceContracts)"
+                :disabled="searchStore.facetSearchInProgress"
+                hide-details
+                class="pl-9 ml-4"
+                v-model="searchStore.formalRuleLicenceContract"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
               <v-divider
-                  :thickness="1"
-                  class="border-opacity-100"
-                  color="grey-lighten-1"
+                :thickness="1"
+                class="border-opacity-100"
+                color="grey-lighten-1"
               ></v-divider>
               <v-checkbox
-                  v-if="searchStore.ccLicenceNoRestrictions > 0"
-                  :label=ppCCLicenceNoRestriction(searchStore.ccLicenceNoRestrictions)
-                  :disabled="searchStore.facetSearchInProgress"
-                  hide-details
-                  class="pl-9 ml-4"
-                  v-model="searchStore.formalRuleCCNoRestriction"
-                  @update:modelValue="emitSearchStart"
+                v-if="searchStore.ccLicenceNoRestrictions > 0"
+                :label="
+                  ppCCLicenceNoRestriction(searchStore.ccLicenceNoRestrictions)
+                "
+                :disabled="searchStore.facetSearchInProgress"
+                hide-details
+                class="pl-9 ml-4"
+                v-model="searchStore.formalRuleCCNoRestriction"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
               <v-divider
-                  :thickness="1"
-                  class="border-opacity-100"
-                  color="grey-lighten-1"
+                :thickness="1"
+                class="border-opacity-100"
+                color="grey-lighten-1"
               ></v-divider>
               <v-checkbox
-                  v-if="searchStore.zbwUserAgreements > 0"
-                  :label=ppZBWUserAgreements(searchStore.zbwUserAgreements)
-                  :disabled="searchStore.facetSearchInProgress"
-                  hide-details
-                  class="pl-9 ml-4"
-                  v-model="searchStore.formalRuleUserAgreement"
-                  @update:modelValue="emitSearchStart"
+                v-if="searchStore.zbwUserAgreements > 0"
+                :label="ppZBWUserAgreements(searchStore.zbwUserAgreements)"
+                :disabled="searchStore.facetSearchInProgress"
+                hide-details
+                class="pl-9 ml-4"
+                v-model="searchStore.formalRuleUserAgreement"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
               <v-divider
-                  :thickness="1"
-                  class="border-opacity-100"
-                  color="grey-lighten-1"
+                :thickness="1"
+                class="border-opacity-100"
+                color="grey-lighten-1"
               ></v-divider>
               <v-checkbox
-                  v-if="searchStore.noLegalRisks > 0"
-                  :label=ppNoLegalRisk(searchStore.noLegalRisks)
-                  hide-details
-                  :disabled="searchStore.facetSearchInProgress"
-                  class="pl-9 ml-4"
-                  v-model="searchStore.formalRuleNoLegalRisk"
-                  @update:modelValue="emitSearchStart"
+                v-if="searchStore.noLegalRisks > 0"
+                :label="ppNoLegalRisk(searchStore.noLegalRisks)"
+                hide-details
+                :disabled="searchStore.facetSearchInProgress"
+                class="pl-9 ml-4"
+                v-model="searchStore.formalRuleNoLegalRisk"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
             </v-list-group>
             <v-list-group no-action sub-group eager>
@@ -998,68 +1050,68 @@ export default defineComponent({
               </template>
               <h6></h6>
               <v-checkbox
-                  label="Keine Rechteeinträge"
-                  hide-details
-                  class="pl-9 ml-4"
-                  :disabled="searchStore.facetSearchInProgress"
-                  v-model="searchStore.noRightInformation"
-                  @update:modelValue="emitSearchStart"
+                label="Keine Rechteeinträge"
+                hide-details
+                class="pl-9 ml-4"
+                :disabled="searchStore.facetSearchInProgress"
+                v-model="searchStore.noRightInformation"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
               <v-divider
-                  :thickness="1"
-                  class="border-opacity-100"
-                  color="grey-lighten-1"
+                :thickness="1"
+                class="border-opacity-100"
+                color="grey-lighten-1"
               ></v-divider>
               <v-checkbox
-                  label="Manuell erstellte Rechteeinträge"
-                  hide-details
-                  class="pl-9 ml-4"
-                  :disabled="searchStore.facetSearchInProgress"
-                  v-model="searchStore.manualRight"
-                  @update:modelValue="emitSearchStart"
+                label="Manuell erstellte Rechteeinträge"
+                hide-details
+                class="pl-9 ml-4"
+                :disabled="searchStore.facetSearchInProgress"
+                v-model="searchStore.manualRight"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
               <v-divider
-                  :thickness="1"
-                  class="border-opacity-100"
-                  color="grey-lighten-1"
+                :thickness="1"
+                class="border-opacity-100"
+                color="grey-lighten-1"
               ></v-divider>
               <v-checkbox
-                  label="Löschungen"
-                  hide-details
-                  :disabled="searchStore.facetSearchInProgress"
-                  class="pl-9 ml-4"
-                  v-model="searchStore.deletions"
-                  @update:modelValue="emitSearchStart"
+                label="Löschungen"
+                hide-details
+                :disabled="searchStore.facetSearchInProgress"
+                class="pl-9 ml-4"
+                v-model="searchStore.deletions"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
                 <v-list-item
-                    v-bind="props"
-                    title="Template-Namen"
+                  v-bind="props"
+                  title="Template-Namen"
                 ></v-list-item>
               </template>
               <h6></h6>
               <v-list>
                 <v-list-item
-                    v-for="(item, i) in searchStore.templateNameReceived"
-                    :key="i"
-                    :value="item"
-                    color="primary"
-                    rounded="shaped"
+                  v-for="(item, i) in searchStore.templateNameReceived"
+                  :key="i"
+                  :value="item"
+                  color="primary"
+                  rounded="shaped"
                 >
                   <v-checkbox
-                      :label="ppZDBId(item.templateName, item.count)"
-                      hide-details
-                      :disabled="searchStore.facetSearchInProgress"
-                      class="pl-9 ml-4"
-                      v-model="searchStore.templateNameIdx[i]"
-                      @update:modelValue="emitSearchStart"
+                    :label="ppZDBId(item.templateName, item.count)"
+                    hide-details
+                    :disabled="searchStore.facetSearchInProgress"
+                    class="pl-9 ml-4"
+                    v-model="searchStore.templateNameIdx[i]"
+                    @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                   <v-divider
-                      :thickness="1"
-                      class="border-opacity-100"
-                      color="grey-lighten-1"
+                    :thickness="1"
+                    class="border-opacity-100"
+                    color="grey-lighten-1"
                   ></v-divider>
                 </v-list-item>
               </v-list>

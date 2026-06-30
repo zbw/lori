@@ -19,12 +19,21 @@ import java.util.UUID
  */
 class GenericJobDB(
     connectionPool: ConnectionPool,
+    batchConnectionPool: ConnectionPool,
     tracer: Tracer,
-) : AbstractDB(connectionPool, tracer, tableName = TABLE_NAME_JOBS) {
-    suspend fun insertJob(genericJob: GenericJob): String =
+) : AbstractDB(connectionPool, batchConnectionPool, tracer, tableName = TABLE_NAME_JOBS) {
+    suspend fun insertJob(
+        genericJob: GenericJob,
+        isBatchJob: Boolean = false,
+    ): String =
         DatabaseConnector
             .insertReturningKeys(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_INSERT_JOB,
                 tracer = tracer,
                 spanName = "insertJob",

@@ -35,6 +35,7 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DOI
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONBIZID
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONSTOR_ISSUE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONSTOR_VOLUME
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ENUMERATION
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE_POSTFIX
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ISBN
@@ -88,14 +89,16 @@ import java.sql.ResultSet
  */
 class SearchDB(
     val connectionPool: ConnectionPool,
+    val batchConnectionPool: ConnectionPool,
     private val tracer: Tracer,
-    val statisticsService: StatisticsService = StatisticsService(connectionPool, tracer),
+    val statisticsService: StatisticsService = StatisticsService(connectionPool, batchConnectionPool, tracer),
 ) {
     suspend fun searchForFacets(
         searchExpression: SearchExpression?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
+        isBatchJob: Boolean = false,
     ): FacetTransientSet =
         coroutineScope {
             // TODO(CB): Return error when noRightInformationFilter is set with right filters in search expression
@@ -162,6 +165,7 @@ class SearchDB(
                                 listOf(FormalRuleFilter(listOf(FormalRule.CC_LICENCE_NO_RESTRICTION))),
                         occurrenceForColumn = COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,
                         noRightInformationFilter = noRightInformationFilter,
+                        isBatchJob = isBatchJob,
                     ) { rs ->
                         Pair(
                             rs.getBoolean(1),
@@ -283,6 +287,7 @@ class SearchDB(
         metadataSearchFilters: List<MetadataSearchFilter>,
         rightSearchFilters: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
+        isBatchJob: Boolean = false,
         operation: (rs: ResultSet) -> Pair<K, V>,
     ): Map<K, V> {
         val sql =
@@ -298,7 +303,12 @@ class SearchDB(
             tracer = tracer,
             spanName = "searchOccurence $occurrenceForColumn",
             mapper = { rs: ResultSet -> operation(rs) },
-            connectionPool = connectionPool,
+            connectionPool =
+                if (!isBatchJob) {
+                    connectionPool
+                } else {
+                    batchConnectionPool
+                },
             params = { stmt ->
                 var counter = 1
                 val searchPairs =
@@ -337,6 +347,7 @@ class SearchDB(
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
         noRightInformationFilter: NoRightInformationFilter?,
+        isBatchJob: Boolean = false,
     ): Int {
         val sql =
             buildCountSearchQuery(
@@ -347,7 +358,12 @@ class SearchDB(
                 hasHandlesToIgnore = false,
             )
         return DatabaseConnector.count(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (!isBatchJob) {
+                    connectionPool
+                } else {
+                    batchConnectionPool
+                },
             sql = sql,
             tracer = tracer,
             spanName = "countSearchMetadata",
@@ -389,6 +405,7 @@ class SearchDB(
         noRightInformationFilter: NoRightInformationFilter?,
         handlesToIgnore: List<String>,
         sortInformation: SortInformation,
+        isBatchJob: Boolean = false,
     ): List<ItemMetadata> {
         val sql =
             buildSearchQuery(
@@ -402,7 +419,12 @@ class SearchDB(
                 sortInformation = sortInformation,
             )
         return DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (!isBatchJob) {
+                    connectionPool
+                } else {
+                    batchConnectionPool
+                },
             sql = sql,
             mapper = { rs: ResultSet ->
                 extractMetadataRS(rs)
@@ -461,6 +483,7 @@ class SearchDB(
         noRightInformationFilter: NoRightInformationFilter?,
         handlesToIgnore: List<String> = emptyList(),
         sortInformation: SortInformation,
+        isBatchJob: Boolean = false,
     ): List<ItemMetadata> =
         searchMetadata(
             searchExpression = searchExpression,
@@ -471,6 +494,7 @@ class SearchDB(
             noRightInformationFilter = noRightInformationFilter,
             handlesToIgnore = handlesToIgnore,
             sortInformation = sortInformation,
+            isBatchJob = isBatchJob,
         )
 
     suspend fun searchForHandles(
@@ -482,6 +506,7 @@ class SearchDB(
         noRightInformationFilter: NoRightInformationFilter?,
         handlesToIgnore: List<String>,
         sortInformation: SortInformation,
+        isBatchJob: Boolean = false,
     ): List<String> {
         val rs: List<ItemMetadata> =
             searchMetadata(
@@ -493,6 +518,7 @@ class SearchDB(
                 noRightInformationFilter = noRightInformationFilter,
                 handlesToIgnore = handlesToIgnore,
                 sortInformation = sortInformation,
+                isBatchJob = isBatchJob,
             )
         return rs.map { it.handle }
     }
@@ -515,7 +541,7 @@ class SearchDB(
                 "$COLUMN_METADATA_ECONSTOR_ISSUE," +
                 "$COLUMN_METADATA_ECONSTOR_VOLUME,$COLUMN_METADATA_IS_PART_OF_BOOK,$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
                 "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL,$COLUMN_METADATA_PPN_SERIES," +
-                "$TS_COLLECTION,$TS_COMMUNITY,$TS_TITLE,$TS_COLLECTION_HANDLE," +
+                "$COLUMN_METADATA_ENUMERATION,$TS_COLLECTION,$TS_COMMUNITY,$TS_TITLE,$TS_COLLECTION_HANDLE," +
                 "$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE,$TS_HANDLE,$TS_SUBCOMMUNITY_NAME," +
                 COLUMN_METADATA_HANDLE_POSTFIX
 
@@ -532,8 +558,8 @@ class SearchDB(
                 "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID," +
                 "$COLUMN_METADATA_ECONSTOR_ISSUE," +
                 "$COLUMN_METADATA_ECONSTOR_VOLUME,$COLUMN_METADATA_IS_PART_OF_BOOK,$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
-                "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL,$COLUMN_METADATA_PPN_SERIES," +
-                "$COLUMN_METADATA_HANDLE_POSTFIX"
+                "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL,$COLUMN_METADATA_PPN_SERIES,$COLUMN_METADATA_ENUMERATION," +
+                COLUMN_METADATA_HANDLE_POSTFIX
 
         internal fun buildSearchQuery(
             searchExpression: SearchExpression?,

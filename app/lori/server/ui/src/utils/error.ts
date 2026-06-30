@@ -16,7 +16,11 @@ export default {
   },
   errorHandling(
     e: any,
-    callback: (errorMsg: string, errorCode: string, errorDetail: string) => void
+    callback: (
+      errorMsg: string,
+      errorCode: string,
+      errorDetail: string,
+    ) => void,
   ) {
     try {
       e.response
@@ -25,21 +29,21 @@ export default {
           callback(
             this.createErrorMsg(err),
             this.createErrorCode(err),
-            this.createErrorDetail(err)
+            this.createErrorDetail(err),
           );
         })
         .catch((e: any) => {
           callback(
             unexpectedError + "; " + e.toString(),
             "No Error code",
-            "No Details"
+            "No Details",
           );
         });
     } catch (e: any) {
       callback(
         unexpectedError + "; " + e.toString(),
         "No Error code",
-        "No Details"
+        "No Details",
       );
     }
   },

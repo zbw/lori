@@ -86,5 +86,5 @@ export default {
     return bookmarkApi.updateBookmark({
       body: bookmark,
     });
-  }
+  },
 };

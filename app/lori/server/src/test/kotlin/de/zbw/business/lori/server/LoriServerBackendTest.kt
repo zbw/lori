@@ -50,6 +50,7 @@ class LoriServerBackendTest : DatabaseTest() {
     private val backend =
         LoriServerBackend(
             DatabaseConnector(
+                batchConnectionPool = ConnectionPool(testDataSource),
                 connectionPool = ConnectionPool(testDataSource),
                 tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
             ),
@@ -1209,6 +1210,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 ppnJournal = "ppnJournal",
                 isPartOfBook = "part of book",
                 isPartOfJournal = "part of journal",
+                enumeration = "volume,issue",
             )
 
         private val TEST_RIGHT =

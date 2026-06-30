@@ -45,6 +45,8 @@ MetadataRest:
       type: string
     econstorVolume:
       type: string
+    enumeration:
+      type: string
     handle:
       type: string
     isbn:

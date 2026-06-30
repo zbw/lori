@@ -79,7 +79,9 @@ class ServicePoolWithProbes(
         ),
 ) : ServiceLifecycle() {
     init {
-        samlUtils.initMetadataResolver(httpClient)
+        if (config.stage != "dev") {
+            samlUtils.initMetadataResolver(httpClient)
+        }
     }
 
     private var server: NettyApplicationEngine =

@@ -38,6 +38,7 @@ class NoRightFilterTest : DatabaseTest() {
     private val backend =
         LoriServerBackend(
             DatabaseConnector(
+                batchConnectionPool = ConnectionPool(testDataSource),
                 connectionPool = ConnectionPool(testDataSource),
                 tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
             ),

@@ -26,6 +26,7 @@ class ExportJobDBTest : DatabaseTest() {
     private val exportJobDB =
         DatabaseConnector(
             connectionPool = ConnectionPool(testDataSource),
+            batchConnectionPool = ConnectionPool(testDataSource),
             tracer = OpenTelemetry.noop().getTracer("foo"),
         ).exportJobDB
 
@@ -46,7 +47,10 @@ class ExportJobDBTest : DatabaseTest() {
             val createTime = NOW.toInstant()
             mockkCurrentTime(createTime)
 
-            val jobUUID = exportJobDB.insertJob(TEST_Export_JOB).let { UUID.fromString(it) }
+            val jobUUID =
+                exportJobDB
+                    .insertJob(TEST_Export_JOB)
+                    .let { UUID.fromString(it) }
             val jobReceived = exportJobDB.getJobById(jobUUID)
             assertThat(
                 jobReceived.toString(),

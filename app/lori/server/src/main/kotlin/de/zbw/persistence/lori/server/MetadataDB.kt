@@ -26,11 +26,20 @@ import kotlin.collections.first
  */
 class MetadataDB(
     connectionPool: ConnectionPool,
+    batchConnectionPool: ConnectionPool,
     tracer: Tracer,
-) : AbstractDB(connectionPool, tracer, TABLE_NAME_ITEM_METADATA) {
-    internal suspend fun deleteMetadata(handles: List<String>): Int =
+) : AbstractDB(connectionPool, batchConnectionPool, tracer, TABLE_NAME_ITEM_METADATA) {
+    internal suspend fun deleteMetadata(
+        handles: List<String>,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_METADATA,
             tracer = tracer,
             spanName = "deleteMetadata",
@@ -39,10 +48,18 @@ class MetadataDB(
             },
         )
 
-    suspend fun metadataContainsHandle(handle: String): Boolean =
+    suspend fun metadataContainsHandle(
+        handle: String,
+        isBatchJob: Boolean = false,
+    ): Boolean =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_METADATA_CONTAINS_HANDLE,
                 tracer = tracer,
                 spanName = "metadataContainsHandle",
@@ -57,13 +74,19 @@ class MetadataDB(
     suspend fun getMetadataRange(
         limit: Int,
         offset: Int,
+        isBatchJob: Boolean = false,
     ): List<ItemMetadata> {
         val sql =
             STATEMENT_SELECT_ALL_METADATA_FROM +
                 " ORDER BY ${SortInformation.DEFAULT.sortByField.columnName}" +
                 " ${SortInformation.DEFAULT.sortOrder.sqlSyntax} LIMIT ? OFFSET ?;"
         return DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = sql,
             tracer = tracer,
             spanName = "getMetadataRange",
@@ -77,10 +100,18 @@ class MetadataDB(
         )
     }
 
-    suspend fun itemContainsHandle(handle: String): Boolean =
+    suspend fun itemContainsHandle(
+        handle: String,
+        isBatchJob: Boolean = false,
+    ): Boolean =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_ITEM_CONTAINS_METADATA,
                 tracer = tracer,
                 spanName = "itemContainsHandle",
@@ -92,10 +123,18 @@ class MetadataDB(
                 },
             ).first()
 
-    suspend fun getMetadata(handles: List<String>): List<ItemMetadata> =
+    suspend fun getMetadata(
+        handles: List<String>,
+        isBatchJob: Boolean = false,
+    ): List<ItemMetadata> =
         DatabaseConnector.select(
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_GET_METADATA,
-            connectionPool = connectionPool,
             tracer = tracer,
             spanName = "getMetadata",
             params = { stmt ->
@@ -106,10 +145,18 @@ class MetadataDB(
             },
         )
 
-    suspend fun getExistingHandles(handles: List<String>): List<String> =
+    suspend fun getExistingHandles(
+        handles: List<String>,
+        isBatchJob: Boolean = false,
+    ): List<String> =
         DatabaseConnector.select(
             sql = STATEMENT_GET_EXISTING_HANDLES,
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             tracer = tracer,
             spanName = "getExistingHandles",
             params = { stmt ->
@@ -120,10 +167,18 @@ class MetadataDB(
             },
         )
 
-    suspend fun getDeletedMetadataByHandles(handles: List<String>): List<String> =
+    suspend fun getDeletedMetadataByHandles(
+        handles: List<String>,
+        isBatchJob: Boolean = false,
+    ): List<String> =
         DatabaseConnector.select(
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_GET_DELETED_METADATA_BY_HANDLES,
-            connectionPool = connectionPool,
             tracer = tracer,
             spanName = "getMetadataByHandles",
             params = { stmt ->
@@ -137,13 +192,19 @@ class MetadataDB(
     suspend fun getDeletedMetadata(
         limit: Int,
         offset: Int,
+        isBatchJob: Boolean = false,
     ): List<ItemMetadata> =
         DatabaseConnector.select(
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql =
                 STATEMENT_GET_DELETED_METADATA.dropLast(1) +
                     " ORDER BY ${SortInformation.DEFAULT.sortByField.columnName}" +
                     " ${SortInformation.DEFAULT.sortOrder.sqlSyntax} LIMIT ? OFFSET ?;",
-            connectionPool = connectionPool,
             tracer = tracer,
             spanName = "getDeletedMetadata",
             params = { stmt ->
@@ -155,10 +216,15 @@ class MetadataDB(
             },
         )
 
-    suspend fun getDeletedMetadataCount(): Int =
+    suspend fun getDeletedMetadataCount(isBatchJob: Boolean = false): Int =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_GET_DELETED_METADATA_COUNT,
                 tracer = tracer,
                 spanName = "getDeletedMetadataCount",
@@ -167,9 +233,17 @@ class MetadataDB(
                 },
             ).first()
 
-    suspend fun upsertMetadataBatch(itemMetadata: List<ItemMetadata>): IntArray =
+    suspend fun upsertMetadataBatch(
+        itemMetadata: List<ItemMetadata>,
+        isBatchJob: Boolean = false,
+    ): IntArray =
         DatabaseConnector.insertBatch(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_UPSERT_METADATA,
             tracer = tracer,
             spanName = "upsertMetadataBatch",
@@ -184,10 +258,18 @@ class MetadataDB(
             },
         )
 
-    suspend fun insertMetadata(itemMetadata: ItemMetadata): String =
+    suspend fun insertMetadata(
+        itemMetadata: ItemMetadata,
+        isBatchJob: Boolean = false,
+    ): String =
         DatabaseConnector
             .insertReturningKeys(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_INSERT_METADATA,
                 tracer = tracer,
                 spanName = "insertMetadata",
@@ -202,9 +284,17 @@ class MetadataDB(
                 },
             ).first()
 
-    suspend fun getMetadataHandlesOlderThanLastUpdatedOn(instant: Instant): List<MetadataHandleLastUpdatedTransient> =
+    suspend fun getMetadataHandlesOlderThanLastUpdatedOn(
+        instant: Instant,
+        isBatchJob: Boolean = false,
+    ): List<MetadataHandleLastUpdatedTransient> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON,
             tracer = tracer,
             spanName = "getMetadataHandlesOlderThanLastUpdatedOn",
@@ -224,9 +314,15 @@ class MetadataDB(
     suspend fun updateMetadataDeleteStatus(
         handles: List<String>,
         status: Boolean,
+        isBatchJob: Boolean = false,
     ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_UPDATE_DELETE_STATUS,
             tracer = tracer,
             spanName = "updateMetadataDeleteStatus",
@@ -259,6 +355,7 @@ class MetadataDB(
         const val COLUMN_METADATA_ECONBIZID = "econbizid"
         const val COLUMN_METADATA_ECONSTOR_ISSUE = "econstor_issue"
         const val COLUMN_METADATA_ECONSTOR_VOLUME = "econstor_volume"
+        const val COLUMN_METADATA_ENUMERATION = "enumeration"
         const val COLUMN_METADATA_ISBN = "isbn"
         const val COLUMN_METADATA_ISBN_LOWER = "isbn_joined_lower"
         const val COLUMN_METADATA_ISSN = "issn"
@@ -311,7 +408,8 @@ class MetadataDB(
                 "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID,$COLUMN_METADATA_ECONSTOR_ISSUE," +
                 "$COLUMN_METADATA_ECONSTOR_VOLUME,$COLUMN_METADATA_IS_PART_OF_BOOK," +
                 "$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
-                "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL,$COLUMN_METADATA_PPN_SERIES" +
+                "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL,$COLUMN_METADATA_PPN_SERIES," +
+                "$COLUMN_METADATA_ENUMERATION" +
                 " FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON =
@@ -463,6 +561,7 @@ class MetadataDB(
                 ppnBook = rs.getString(localCounter++),
                 ppnJournal = rs.getString(localCounter++),
                 ppnSeries = rs.getString(localCounter++),
+                enumeration = rs.getString(localCounter++),
             )
         }
 

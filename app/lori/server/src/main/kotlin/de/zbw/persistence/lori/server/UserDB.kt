@@ -21,7 +21,7 @@ import java.util.UUID
 class UserDB(
     connectionPool: ConnectionPool,
     tracer: Tracer,
-) : AbstractDB(connectionPool, tracer, TABLE_NAME_SESSIONS) {
+) : AbstractDB(connectionPool, connectionPool, tracer, TABLE_NAME_SESSIONS) {
     suspend fun deleteSessionById(sessionID: String): Int =
         DatabaseConnector.executeUpdate(
             connectionPool = connectionPool,

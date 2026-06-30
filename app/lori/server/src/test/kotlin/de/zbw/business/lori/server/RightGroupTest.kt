@@ -34,6 +34,7 @@ class RightGroupTest : DatabaseTest() {
         LoriServerBackend(
             DatabaseConnector(
                 connectionPool = ConnectionPool(testDataSource),
+                batchConnectionPool = ConnectionPool(testDataSource),
                 tracer = OpenTelemetry.noop().getTracer("foo"),
             ),
             mockk(),

@@ -28,6 +28,7 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DELET
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONBIZID
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONSTOR_ISSUE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONSTOR_VOLUME
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ENUMERATION
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE_POSTFIX
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_BOOK
@@ -68,6 +69,7 @@ class SearchDBTest : DatabaseTest() {
     private val dbConnector =
         DatabaseConnector(
             connectionPool = ConnectionPool(testDataSource),
+            batchConnectionPool = ConnectionPool(testDataSource),
             tracer = OpenTelemetry.noop().getTracer("foo"),
         )
 
@@ -749,7 +751,7 @@ class SearchDBTest : DatabaseTest() {
                 "$COLUMN_METADATA_ECONSTOR_ISSUE," +
                 "$COLUMN_METADATA_ECONSTOR_VOLUME,$COLUMN_METADATA_IS_PART_OF_BOOK,$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
                 "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL," +
-                "$COLUMN_METADATA_PPN_SERIES," +
+                "$COLUMN_METADATA_PPN_SERIES,$COLUMN_METADATA_ENUMERATION," +
                 "ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
                 "ts_hdl,ts_subcom_name,${COLUMN_METADATA_HANDLE_POSTFIX}"
         const val SELECT_ALL =
@@ -762,6 +764,6 @@ class SearchDBTest : DatabaseTest() {
                 "$COLUMN_METADATA_ECONSTOR_ISSUE," +
                 "$COLUMN_METADATA_ECONSTOR_VOLUME,$COLUMN_METADATA_IS_PART_OF_BOOK,$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
                 "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL," +
-                "$COLUMN_METADATA_PPN_SERIES,$COLUMN_METADATA_HANDLE_POSTFIX"
+                "$COLUMN_METADATA_PPN_SERIES,$COLUMN_METADATA_ENUMERATION,$COLUMN_METADATA_HANDLE_POSTFIX"
     }
 }

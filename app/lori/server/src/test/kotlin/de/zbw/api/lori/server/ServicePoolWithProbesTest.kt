@@ -123,6 +123,8 @@ class ServicePoolWithProbesTest {
                 sqlUrl = "jdbc:localhost",
                 sqlUser = "postgres",
                 sqlPassword = "postgres",
+                sqlUserBatch = "batch",
+                sqlPasswordBatch = "batch_password",
                 digitalArchiveAddress = "https://archiveaddress",
                 digitalArchiveUsername = "testuser",
                 digitalArchivePassword = "password",

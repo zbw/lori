@@ -6,8 +6,8 @@ import { computed, defineComponent, PropType, ref } from "vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import metadata_utils from "@/utils/metadata_utils";
 import { useSearchStore } from "@/stores/search";
-import {useUserStore} from "@/stores/user";
-import {ReadonlyDataTableHeader} from "@/types/vuetify";
+import { useUserStore } from "@/stores/user";
+import { ReadonlyDataTableHeader } from "@/types/vuetify";
 import RightsEditWrapper from "@/components/RightsEditWrapper.vue";
 
 export default defineComponent({
@@ -40,9 +40,7 @@ export default defineComponent({
     RightsEditTabs,
   },
 
-  emits: [
-    "addRightSuccessful",
-  ],
+  emits: ["addRightSuccessful"],
 
   setup(props, { emit }) {
     const searchStore = useSearchStore();
@@ -123,9 +121,7 @@ export default defineComponent({
     };
 
     const currentRights = computed(() => {
-      return props.rights.sort(
-          (a, b) => (a.startDate < b.startDate ? 1 : -1),
-      );
+      return props.rights.sort((a, b) => (a.startDate < b.startDate ? 1 : -1));
     });
 
     return {
@@ -176,11 +172,12 @@ export default defineComponent({
           </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-btn
-              class="mb-2"
-              color="primary"
-              dark
-              :disabled="!userStore.isLoggedIn"
-              @click="newRight()">
+            class="mb-2"
+            color="primary"
+            dark
+            :disabled="!userStore.isLoggedIn"
+            @click="newRight()"
+          >
             Neu
           </v-btn>
         </v-toolbar>
@@ -194,8 +191,8 @@ export default defineComponent({
       <template v-slot:item.type="{ item }">
         <v-tooltip location="bottom" text="Template">
           <template v-slot:activator="{ props }">
-              <v-icon v-if="item.isTemplate" v-bind="props">
-                mdi-note-multiple
+            <v-icon v-if="item.isTemplate" v-bind="props">
+              mdi-note-multiple
             </v-icon>
           </template>
         </v-tooltip>

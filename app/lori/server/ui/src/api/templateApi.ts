@@ -19,10 +19,10 @@ export default {
     return templateApi.addTemplate({ body: right });
   },
   applyTemplates(
-      rightIds: Array<string>,
-      all: boolean,
-      skipDraft: boolean,
-      dryRun: boolean,
+    rightIds: Array<string>,
+    all: boolean,
+    skipDraft: boolean,
+    dryRun: boolean,
   ): Promise<TemplateApplicationsRest> {
     return templateApi.applyRightIds({
       all: all,
@@ -44,13 +44,13 @@ export default {
     });
   },
   getTemplateList(
-      offset: number,
-      limit: number,
-      draftFilter: boolean | undefined,
-      exceptionFilter: boolean | undefined,
-      excludes: string | undefined,
-      hasExceptionFilter: boolean | undefined,
-      ): Promise<Array<RightRest>> {
+    offset: number,
+    limit: number,
+    draftFilter: boolean | undefined,
+    exceptionFilter: boolean | undefined,
+    excludes: string | undefined,
+    hasExceptionFilter: boolean | undefined,
+  ): Promise<Array<RightRest>> {
     return templateApi.getTemplateList({
       offset: offset,
       limit: limit,
@@ -104,8 +104,8 @@ export default {
     });
   },
   removeExceptionToTemplate(
-      rightIdTemplate: string,
-      rightIdException: string,
+    rightIdTemplate: string,
+    rightIdException: string,
   ): Promise<void> {
     return templateApi.deleteTemplateExceptionLink({
       rightIdTemplate: rightIdTemplate,

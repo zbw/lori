@@ -14,8 +14,13 @@ class ConnectionPool(
 ) {
     constructor(
         config: LoriConfiguration,
+        isBatch: Boolean,
     ) : this(
-        createConnection(config),
+        if (isBatch) {
+            createBatchConnection(config)
+        } else {
+            createConnection(config)
+        },
     )
 
     suspend fun <T> useConnection(
@@ -35,15 +40,35 @@ class ConnectionPool(
 
     companion object {
         private const val CONNECTION_TIMEOUT = 30000L
+        private const val CONNECTION_TIMEOUT_BATCH = 60000L
         private const val IDLE_TIMEOUT = 80000L
         private const val JDBC_PARALLELISM = 5
         private const val LEAK_DETECTION_THRESHOLD = 2000L
-        private const val MAXIMUM_POOL_SIZE = 10
+        private const val MAXIMUM_POOL_SIZE = 5
+        private const val MAXIMUM_POOL_SIZE_BATCH = 2
         private const val MINIMUM_IDLE = 2
+        private const val MINIMUM_IDLE_BATCH = 1
         private val LOG = LogManager.getLogger(ConnectionPool::class.java)
 
         @OptIn(ExperimentalCoroutinesApi::class)
         private val jdbcSemaphore = Semaphore(JDBC_PARALLELISM)
+
+        // Optimized for batch jobs
+        fun createBatchConnection(config: LoriConfiguration): HikariDataSource {
+            val hiConfig =
+                HikariConfig().apply {
+                    jdbcUrl = config.sqlUrl
+                    username = config.sqlUserBatch
+                    password = config.sqlPasswordBatch
+                    maximumPoolSize = MAXIMUM_POOL_SIZE_BATCH // Reduced for batch
+                    minimumIdle = MINIMUM_IDLE_BATCH // Lower idle connections
+                    connectionTimeout = CONNECTION_TIMEOUT_BATCH // Longer timeout
+                    addDataSourceProperty("ApplicationName", "batch_processor")
+                    addDataSourceProperty("prepareThreshold", "5")
+                    addDataSourceProperty("prepStmtCacheSize", "50")
+                }
+            return HikariDataSource(hiConfig)
+        }
 
         fun createConnection(config: LoriConfiguration): HikariDataSource {
             val hiConfig =

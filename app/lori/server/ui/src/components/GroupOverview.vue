@@ -1,22 +1,26 @@
 <script lang="ts">
 import api from "@/api/api";
-import {computed, defineComponent, onMounted, ref, Ref} from "vue";
-import {BookmarkRest, GroupRest} from "@/generated-sources/openapi";
+import { computed, defineComponent, onMounted, ref, Ref } from "vue";
+import { BookmarkRest, GroupRest } from "@/generated-sources/openapi";
 import GroupEdit from "@/components/GroupEdit.vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import error from "@/utils/error";
-import {useUserStore} from "@/stores/user";
+import { useUserStore } from "@/stores/user";
 import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
 import GroupDeleteDialog from "@/components/GroupDeleteDialog.vue";
-import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
-import {ReadonlyDataTableHeader} from "@/types/vuetify";
+import {
+  RouteLocationNormalizedLoaded,
+  Router,
+  useRoute,
+  useRouter,
+} from "vue-router";
+import { ReadonlyDataTableHeader } from "@/types/vuetify";
 
 export default defineComponent({
-  components: {GroupDeleteDialog, RightsDeleteDialog, GroupEdit },
-  emits: [
-    "groupOverviewClosed"
-  ],
-  setup(props, {emit}) {
+  components: { GroupDeleteDialog, RightsDeleteDialog, GroupEdit },
+  emits: ["groupOverviewClosed"],
+  setup(props, { emit }) {
+    const isLoading = ref(false);
     const renderKey = ref(0);
     const headers: ReadonlyDataTableHeader[] = [
       {
@@ -35,17 +39,21 @@ export default defineComponent({
     const groupLoadError = ref(false);
     const groupLoadErrorMsg = ref("");
     const getGroupList = () => {
+      isLoading.value = true;
       api
-          .getGroupList(0, 500 )
-          .then((r: Array<GroupRest>) => {
-            groupItems.value = r;
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              groupLoadErrorMsg.value = errMsg;
-              groupLoadError.value = true;
-            });
+        .getGroupList(0, 500)
+        .then((r: Array<GroupRest>) => {
+          groupItems.value = r;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            groupLoadErrorMsg.value = errMsg;
+            groupLoadError.value = true;
           });
+        })
+        .finally(() => {
+          isLoading.value = false;
+        });
     };
 
     onMounted(() => getGroupList());
@@ -91,48 +99,51 @@ export default defineComponent({
     const lastModifiedGroup = ref({} as GroupRest);
     const addGroupEntry = (groupId: number) => {
       api
-          .getGroupById(groupId, undefined)
-          .then((group) => {
-            groupItems.value.unshift(group);
-            renderKey.value += 1;
-            successMsgIsActive.value = true;
-            successMsg.value = "Gruppe \"" + group.title + "\" erfolgreich hinzugefügt.";
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              groupLoadErrorMsg.value = errMsg;
-              groupLoadError.value = true;
-            });
+        .getGroupById(groupId, undefined)
+        .then((group) => {
+          groupItems.value.unshift(group);
+          renderKey.value += 1;
+          successMsgIsActive.value = true;
+          successMsg.value =
+            'Gruppe "' + group.title + '" erfolgreich hinzugefügt.';
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            groupLoadErrorMsg.value = errMsg;
+            groupLoadError.value = true;
           });
+        });
     };
     const updateGroupEntry = (groupId: number) => {
       api
-          .getGroupById(groupId, undefined)
-          .then((group) => {
-            groupItems.value[index.value] = group;
-            renderKey.value += 1;
-            successMsgIsActive.value = true;
-            lastModifiedGroup.value = group;
-            successMsg.value = "Gruppe " + "\"" + group.title + "\" erfolgreich geupdated.";
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              groupLoadErrorMsg.value = errMsg;
-              groupLoadError.value = true;
-            });
+        .getGroupById(groupId, undefined)
+        .then((group) => {
+          groupItems.value[index.value] = group;
+          renderKey.value += 1;
+          successMsgIsActive.value = true;
+          lastModifiedGroup.value = group;
+          successMsg.value =
+            "Gruppe " + '"' + group.title + '" erfolgreich geupdated.';
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            groupLoadErrorMsg.value = errMsg;
+            groupLoadError.value = true;
           });
+        });
     };
 
     const deleteGroupEntry = () => {
       const deletedGroup: GroupRest = groupItems.value[index.value];
-      successMsg.value = "Gruppe \"" + deletedGroup.title + "\" erfolgreich gelöscht.";
+      successMsg.value =
+        'Gruppe "' + deletedGroup.title + '" erfolgreich gelöscht.';
       groupItems.value.splice(index.value, 1);
       renderKey.value += 1;
       successMsgIsActive.value = true;
     };
 
     const tooltipEditText = computed(() => {
-      if(userStore.isLoggedIn){
+      if (userStore.isLoggedIn) {
         return "Bearbeiten";
       } else {
         return "Anzeigen";
@@ -153,11 +164,12 @@ export default defineComponent({
       deleteDialogActivated.value = false;
     };
 
-    const deletionSuccessful = () =>  {
+    const deletionSuccessful = () => {
       groupItems.value.splice(index.value, 1);
       successMsgIsActive.value = true;
-      successMsg.value = "Gruppe \"" + currentGroup.value.title + "\" erfolgreich gelöscht.";
-    }
+      successMsg.value =
+        'Gruppe "' + currentGroup.value.title + '" erfolgreich gelöscht.';
+    };
 
     /**
      * Closing
@@ -167,14 +179,13 @@ export default defineComponent({
     };
 
     return {
-      closeDeleteDialog,
       currentGroup,
       dialogStore,
       deleteDialogActivated,
-      deletionSuccessful,
       groupLoadError,
       groupLoadErrorMsg,
       headers,
+      isLoading,
       isNew,
       items: groupItems,
       lastModifiedGroup,
@@ -186,9 +197,11 @@ export default defineComponent({
       activateGroupEditDialog,
       addGroupEntry,
       close,
+      closeDeleteDialog,
       closeGroupEditDialog,
       createNewGroup,
       deleteGroupEntry,
+      deletionSuccessful,
       editGroup,
       openDeleteDialog,
       updateGroupEntry,
@@ -202,84 +215,88 @@ export default defineComponent({
   <v-card position="relative">
     <v-toolbar>
       <v-spacer></v-spacer>
-      <v-btn
-          icon="mdi-close"
-          @click="close"
-      ></v-btn>
+      <v-btn icon="mdi-close" @click="close"></v-btn>
     </v-toolbar>
     <v-container>
       <v-snackbar
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          v-model="successMsgIsActive"
-          color="success"
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="5000"
+        v-model="successMsgIsActive"
+        color="success"
       >
         {{ successMsg }}
       </v-snackbar>
       <v-snackbar
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          v-model="groupLoadError"
-          color="error"
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="5000"
+        v-model="groupLoadError"
+        color="error"
       >
         {{ groupLoadErrorMsg }}
       </v-snackbar>
-      <v-card-title>IP-Gruppen</v-card-title>
+      <v-card-title>
+        IP-Gruppen
+        <v-progress-circular
+          v-if="isLoading"
+          color="blue darken-1"
+          indeterminate
+          class="ml-5"
+        ></v-progress-circular>
+      </v-card-title>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn
-            color="blue darken-1"
-            @click="createNewGroup"
-            :disabled="!userStore.isLoggedIn"
-        >Neue IP-Gruppe anlegen
+          color="blue darken-1"
+          @click="createNewGroup"
+          :disabled="!userStore.isLoggedIn"
+          >Neue IP-Gruppe anlegen
         </v-btn>
       </v-card-actions>
       <v-data-table
-          :headers="headers"
-          :items="items"
-          :key="renderKey"
-          loading-text="Daten werden geladen... Bitte warten."
-          item-value="groupName"
+        :headers="headers"
+        :items="items"
+        :key="renderKey"
+        :loading="isLoading"
+        loading-text="Daten werden geladen... Bitte warten."
+        item-value="groupName"
       >
         <template v-slot:item.actions="{ item }">
           <v-tooltip location="bottom" :text="tooltipEditText">
             <template v-slot:activator="{ props }">
               <v-btn
-                  v-if="userStore.isLoggedIn"
-                  variant="text"
-                  @click="editGroup(item)"
-                  icon="mdi-pencil"
-                  v-bind="props"
-                  class="tooltip-btn"
+                v-if="userStore.isLoggedIn"
+                variant="text"
+                @click="editGroup(item)"
+                icon="mdi-pencil"
+                v-bind="props"
+                class="tooltip-btn"
               >
               </v-btn>
               <v-btn
-                  v-else
-                  variant="text"
-                  @click="editGroup(item)"
-                  icon="mdi-eye"
-                  v-bind="props"
-                  class="tooltip-btn"
+                v-else
+                variant="text"
+                @click="editGroup(item)"
+                icon="mdi-eye"
+                v-bind="props"
+                class="tooltip-btn"
               >
               </v-btn>
             </template>
           </v-tooltip>
-          <v-tooltip
-              location="bottom"
-          >
+          <v-tooltip location="bottom">
             <template v-slot:activator="{ props }">
               <div v-bind="props" class="d-inline-block">
                 <v-btn
-                    variant="text"
-                    @click="openDeleteDialog(item)"
-                    icon="mdi-delete"
-                    :disabled="!userStore.isLoggedIn"
+                  variant="text"
+                  @click="openDeleteDialog(item)"
+                  icon="mdi-delete"
+                  :disabled="!userStore.isLoggedIn"
                 >
                 </v-btn>
               </div>
@@ -287,33 +304,30 @@ export default defineComponent({
             <span>Löschen</span>
           </v-tooltip>
         </template>
-
       </v-data-table>
       <v-dialog
-          v-model="dialogStore.groupEditActivated"
-          :retain-focus="false"
-          v-on:close="closeGroupEditDialog"
-          max-width="1500px"
-          max-height="850px"
-          scrollable
-          persistent
+        v-model="dialogStore.groupEditActivated"
+        :retain-focus="false"
+        v-on:close="closeGroupEditDialog"
+        max-width="1500px"
+        max-height="850px"
+        scrollable
+        persistent
       >
         <GroupEdit
-            :isNew="isNew"
-            :group="currentGroup"
-            v-on:addGroupSuccessful="addGroupEntry"
-            v-on:deleteGroupSuccessful="deleteGroupEntry"
-            v-on:updateGroupSuccessful="updateGroupEntry"
-            v-on:groupEditClosed="closeGroupEditDialog"
+          :isNew="isNew"
+          :group="currentGroup"
+          v-on:addGroupSuccessful="addGroupEntry"
+          v-on:deleteGroupSuccessful="deleteGroupEntry"
+          v-on:updateGroupSuccessful="updateGroupEntry"
+          v-on:groupEditClosed="closeGroupEditDialog"
         ></GroupEdit>
       </v-dialog>
-      <v-dialog
-          v-model="deleteDialogActivated" max-width="700px"
-      >
+      <v-dialog v-model="deleteDialogActivated" max-width="700px">
         <GroupDeleteDialog
-            :group-id="currentGroup.groupId"
-            v-on:deleteDialogClosed="closeDeleteDialog"
-            v-on:deleteGroupSuccessful="deletionSuccessful"
+          :group-id="currentGroup.groupId"
+          v-on:deleteDialogClosed="closeDeleteDialog"
+          v-on:deleteGroupSuccessful="deletionSuccessful"
         ></GroupDeleteDialog>
       </v-dialog>
     </v-container>

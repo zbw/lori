@@ -29,6 +29,7 @@ class ArraysNoValueTest : DatabaseTest() {
         LoriServerBackend(
             DatabaseConnector(
                 connectionPool = ConnectionPool(testDataSource),
+                batchConnectionPool = ConnectionPool(testDataSource),
                 tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
             ),
             mockk(),

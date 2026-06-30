@@ -1,9 +1,9 @@
 <script lang="ts">
-import {computed, defineComponent, onMounted, ref, Ref, watch} from "vue";
-import {RightRest} from "@/generated-sources/openapi";
+import { computed, defineComponent, onMounted, ref, Ref, watch } from "vue";
+import { RightRest } from "@/generated-sources/openapi";
 import error from "@/utils/error";
 import templateApi from "@/api/templateApi";
-import {ReadonlyDataTableHeader} from "@/types/vuetify";
+import { ReadonlyDataTableHeader } from "@/types/vuetify";
 
 export default defineComponent({
   props: {
@@ -36,34 +36,30 @@ export default defineComponent({
     const selectedTemplates: Ref<Array<RightRest>> = ref([]);
     const getTemplateList = () => {
       templateApi
-          .getTemplateList(
-              0,
-              500,
-              true,
-              false,
-              props.rightId,
-              false,
-          ) // TODO: simplification for now
-          .then((r: Array<RightRest>) => {
-            templateItems.value = r;
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
+        .getTemplateList(0, 500, true, false, props.rightId, false) // TODO: simplification for now
+        .then((r: Array<RightRest>) => {
+          templateItems.value = r;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
+        });
     };
 
     const selectedRowColor = (row: any) => {
-      if(selectedTemplates.value[0] !== undefined && selectedTemplates.value[0].rightId == row.item.rightId){
-        return { class: "bg-blue-lighten-4"}
+      if (
+        selectedTemplates.value[0] !== undefined &&
+        selectedTemplates.value[0].rightId == row.item.rightId
+      ) {
+        return { class: "bg-blue-lighten-4" };
       }
     };
 
     const addActiveItem = (mouseEvent: MouseEvent, row: any) => {
       const bookmark: RightRest | undefined = templateItems.value.find(
-          (e) => e.rightId === row.item.rightId,
+        (e) => e.rightId === row.item.rightId,
       );
       if (bookmark !== undefined) {
         selectedTemplates.value = [row.item];
@@ -119,52 +115,52 @@ export default defineComponent({
   <v-card position="relative">
     <v-container>
       <v-card-title>Auswahl Ausnahme</v-card-title>
-      <span
-          v-if="computedShowWarning"
-          class="text-red">Hinweis: Es können Einträge fehlen, da das aktuelle Template nicht gespeichert wurde!</span>
+      <span v-if="computedShowWarning" class="text-red"
+        >Hinweis: Es können Einträge fehlen, da das aktuelle Template nicht
+        gespeichert wurde!</span
+      >
       <v-snackbar
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          v-model="errorMsgIsActive"
-          color="error"
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="5000"
+        v-model="errorMsgIsActive"
+        color="error"
       >
         {{ errorMsg }}
       </v-snackbar>
       <v-text-field
-          v-model="searchTerm"
-          append-icon="mdi-magnify"
-          hide-details
-          label="Suche"
-          single-line
+        v-model="searchTerm"
+        append-icon="mdi-magnify"
+        hide-details
+        label="Suche"
+        single-line
       ></v-text-field>
       <v-data-table
-          v-model="selectedTemplates"
-          :headers="headers"
-          :items="templateItems"
-          :search="searchTerm"
-          :row-props="selectedRowColor"
-          item-value="bookmarkId"
-          select-strategy="single"
-          return-object
-          @click:row="addActiveItem"
+        v-model="selectedTemplates"
+        :headers="headers"
+        :items="templateItems"
+        :search="searchTerm"
+        :row-props="selectedRowColor"
+        item-value="bookmarkId"
+        select-strategy="single"
+        return-object
+        @click:row="addActiveItem"
       >
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text="Zurück" @click="close"></v-btn>
         <v-btn
-            :disabled="selectedTemplates.length == 0"
-            color="blue darken-1"
-            text="Speichern"
-            @click="save"
+          :disabled="selectedTemplates.length == 0"
+          color="blue darken-1"
+          text="Speichern"
+          @click="save"
         >
         </v-btn>
       </v-card-actions>
     </v-container>
   </v-card>
 </template>
-<style scoped>
-</style>
+<style scoped></style>

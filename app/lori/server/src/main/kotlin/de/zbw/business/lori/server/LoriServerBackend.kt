@@ -106,10 +106,11 @@ class LoriServerBackend(
         rightId: String,
         deleteOnConflict: Boolean = false,
         createdBy: String = "",
+        isBatchJob: Boolean = false,
     ): Either<Pair<HttpStatusCode, ErrorRest>, String> =
         if (checkRightConflicts(handle, rightId)) {
             if (deleteOnConflict) {
-                dbConnector.rightDB.deleteRightsByIds(listOf(rightId))
+                dbConnector.rightDB.deleteRightsByIds(listOf(rightId), isBatchJob)
             }
             Either.Left(
                 Pair(
@@ -126,6 +127,7 @@ class LoriServerBackend(
                             rightId = rightId,
                         ),
                     createdBy = createdBy,
+                    isBatchJob = isBatchJob,
                 )?.let { Either.Right(it) }
                 ?: let {
                     LOG.error("Could not insert item entry for handle '$handle' and rightId '$rightId'")
@@ -139,13 +141,17 @@ class LoriServerBackend(
 
     suspend fun insertMetadataElement(metadata: ItemMetadata): String = dbConnector.metadataDB.insertMetadata(metadata)
 
-    suspend fun insertRight(right: ItemRight): String {
-        val generatedRightId = dbConnector.rightDB.insertRight(right)
+    suspend fun insertRight(
+        right: ItemRight,
+        isBatchJob: Boolean = false,
+    ): String {
+        val generatedRightId = dbConnector.rightDB.insertRight(right, isBatchJob)
         right.groupIds?.forEach { id ->
             dbConnector.groupDB.insertGroupRightPair(
                 rightId = generatedRightId,
                 groupId = id,
                 createdBy = right.createdBy ?: "Unknown",
+                isBatchJob = isBatchJob,
             )
         }
         createRelationshipsByRight(right)
@@ -202,7 +208,10 @@ class LoriServerBackend(
     suspend fun upsertMetadataElements(metadataElems: List<ItemMetadata>): IntArray =
         dbConnector.metadataDB.upsertMetadataBatch(metadataElems.map { it })
 
-    suspend fun upsertMetadata(metadata: List<ItemMetadata>): IntArray = dbConnector.metadataDB.upsertMetadataBatch(metadata)
+    suspend fun upsertMetadata(
+        metadata: List<ItemMetadata>,
+        isBatchJob: Boolean = false,
+    ): IntArray = dbConnector.metadataDB.upsertMetadataBatch(metadata, isBatchJob)
 
     suspend fun updateMetadataAsDeleted(instant: Instant): Int {
         val deletedHandles: List<MetadataHandleLastUpdatedTransient> =
@@ -360,7 +369,10 @@ class LoriServerBackend(
 
     suspend fun getMetadataElementsByIds(handles: List<String>): List<ItemMetadata> = dbConnector.metadataDB.getMetadata(handles)
 
-    suspend fun getExistingMetadataHandles(handles: List<String>): List<String> = dbConnector.metadataDB.getExistingHandles(handles)
+    suspend fun getExistingMetadataHandles(
+        handles: List<String>,
+        isBatchJob: Boolean = false,
+    ): List<String> = dbConnector.metadataDB.getExistingHandles(handles, isBatchJob)
 
     suspend fun getItemRowsByHandleAndRightId(
         handle: String,
@@ -944,18 +956,18 @@ class LoriServerBackend(
             )
         var errorCount = 0
         for (offsetCounter in 0..<ceil(handlesWithoutRightsCount.toDouble() / DEFAULT_CHUNK_SIZE).toInt()) {
-            val metadataWithoutRights =
+            val metadataNoRightsNoDeleted =
                 dbConnector.searchDB.searchMetadataItems(
                     searchExpression = null,
                     limit = DEFAULT_CHUNK_SIZE,
                     offset = offsetCounter * DEFAULT_CHUNK_SIZE,
-                    metadataSearchFilter = emptyList(),
+                    metadataSearchFilter = listOf(DeletionsFilter(on = false)),
                     rightSearchFilter = emptyList(),
                     noRightInformationFilter = NoRightInformationFilter(),
                     sortInformation = SortInformation.DEFAULT,
                 )
             val errors =
-                metadataWithoutRights.map { metadata ->
+                metadataNoRightsNoDeleted.map { metadata ->
                     RightError(
                         handle = metadata.handle,
                         message = "Handle ${metadata.handle} besitzt keine Rechteinformation.",

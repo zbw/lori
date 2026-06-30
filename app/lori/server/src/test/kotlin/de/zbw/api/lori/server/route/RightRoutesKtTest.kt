@@ -558,6 +558,8 @@ class RightRoutesKtTest {
                 mailFrom = "my@mail.com",
                 url = "lori.home",
                 groupIdZBWTerminal = 1,
+                sqlUserBatch = "batch",
+                sqlPasswordBatch = "batch_password",
             )
 
         val TEST_RIGHT =

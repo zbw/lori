@@ -236,7 +236,7 @@ class DAConnector(
                             )
                         }.map { shortenHandle(it) }
                 val newHandlesGettingDefaultEntries = checkForDefaultEntries(metadataList)
-                val writtenToDB = backend.upsertMetadata(metadataList).filter { it == 1 }.size
+                val writtenToDB = backend.upsertMetadata(metadataList, isBatchJob = true).filter { it == 1 }.size
                 createDefaultRightEntries(newHandlesGettingDefaultEntries)
                 writtenToDB
             }
@@ -347,7 +347,7 @@ class DAConnector(
                 .takeIf { it.isNotEmpty() }
                 ?.map { it.handle }
                 ?: return emptyList()
-        val existingHandles = backend.getExistingMetadataHandles(candidateHandles)
+        val existingHandles = backend.getExistingMetadataHandles(candidateHandles, isBatchJob = true)
         return candidateHandles.filter { it !in existingHandles }
     }
 
@@ -372,11 +372,13 @@ class DAConnector(
                             basisAccessState = BasisAccessState.AUTHOR_RIGHT_EXCEPTION,
                             isTemplate = false,
                         ),
+                        isBatchJob = true,
                     )
                 backend.insertItemEntry(
                     createdBy = Constants.AUTHOR_AUTOMATIC,
                     handle = handle,
                     rightId = generatedRightId,
+                    isBatchJob = true,
                 )
             }
             return

@@ -1,7 +1,9 @@
 import { defineStore } from "pinia";
 import { reactive, Ref, ref } from "vue";
 import {
-  AccessStateWithCountRest, IsPartOfSeriesCountRest, LicenceUrlCountRest,
+  AccessStateWithCountRest,
+  IsPartOfSeriesCountRest,
+  LicenceUrlCountRest,
   PaketSigelWithCountRest,
   PublicationTypeWithCountRest,
   ZdbIdWithCountRest,
@@ -78,7 +80,9 @@ export const useSearchStore = defineStore("search", () => {
     dateValueFormatted: "",
     accessState: "",
   });
-  const accessStateOnDateReceived: Ref<Array<AccessStateWithCountRest>> = ref([]);
+  const accessStateOnDateReceived: Ref<Array<AccessStateWithCountRest>> = ref(
+    [],
+  );
   const accessStateOnDateIdx: Ref<Array<string>> = ref([]);
 
   const storageDateFromFormatted = ref("");

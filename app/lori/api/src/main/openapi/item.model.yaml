@@ -186,15 +186,14 @@ components:
       enum:
         - community_name
         - collection_name
-        - doi
+        - enumeration
+        - is_part_of_journal
+        - is_part_of_series
+        - is_part_of_book
         - handle
-        - isbn
-        - issn
         - paketSigel
-        - ppn
         - publication_type
         - publication_year
-        - series
         - title
     SortOrderRest:
       type: string

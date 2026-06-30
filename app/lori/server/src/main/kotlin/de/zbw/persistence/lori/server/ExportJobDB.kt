@@ -19,12 +19,21 @@ import java.util.UUID
  */
 class ExportJobDB(
     connectionPool: ConnectionPool,
+    batchConnectionPool: ConnectionPool,
     tracer: Tracer,
-) : AbstractDB(connectionPool, tracer, TABLE_NAME_EXPORT_JOBS) {
-    suspend fun insertJob(exportJob: ExportJob): String =
+) : AbstractDB(connectionPool, batchConnectionPool, tracer, TABLE_NAME_EXPORT_JOBS) {
+    suspend fun insertJob(
+        exportJob: ExportJob,
+        isBatchJob: Boolean = false,
+    ): String =
         DatabaseConnector
             .insertReturningKeys(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 tracer = tracer,
                 spanName = "insertJob",
                 sql = STATEMENT_INSERT_EXPORT_JOB,
@@ -44,10 +53,18 @@ class ExportJobDB(
                 },
             ).first()
 
-    suspend fun getJobById(id: UUID): ExportJob? =
+    suspend fun getJobById(
+        id: UUID,
+        isBatchJob: Boolean = false,
+    ): ExportJob? =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 tracer = tracer,
                 spanName = "getExportJobById",
                 sql = STATEMENT_GET_EXPORT_JOB_BY_ID,
@@ -71,9 +88,17 @@ class ExportJobDB(
                 },
             ).firstOrNull()
 
-    suspend fun getJobsOlderThan(instant: Instant): List<ExportJob> =
+    suspend fun getJobsOlderThan(
+        instant: Instant,
+        isBatchJob: Boolean = false,
+    ): List<ExportJob> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             tracer = tracer,
             spanName = "getJobsOlderThan",
             sql = STATEMENT_GET_ALL_IDS,
@@ -97,10 +122,18 @@ class ExportJobDB(
             },
         )
 
-    suspend fun deleteJobsByIds(ids: List<UUID>): Int =
+    suspend fun deleteJobsByIds(
+        ids: List<UUID>,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
             sql = STATEMENT_DELETE_EXPORT_JOBS_BY_IDS,
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             tracer = tracer,
             spanName = "deleteExportJobsByIds",
             params = { stmt ->
@@ -108,10 +141,18 @@ class ExportJobDB(
             },
         )
 
-    suspend fun updateJobStatusById(exportJob: ExportJob): Int =
+    suspend fun updateJobStatusById(
+        exportJob: ExportJob,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_UPDATE_EXPORT_JOB,
-            connectionPool = connectionPool,
             tracer = tracer,
             spanName = "updateExportJobStatusById",
             params = { stmt ->

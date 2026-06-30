@@ -34,6 +34,7 @@ class ItemDBTest : DatabaseTest() {
     private val dbConnector =
         DatabaseConnector(
             connectionPool = ConnectionPool(testDataSource),
+            batchConnectionPool = ConnectionPool(testDataSource),
             tracer = OpenTelemetry.noop().getTracer("foo"),
         )
 
@@ -264,6 +265,7 @@ class ItemDBTest : DatabaseTest() {
                 ppnJournal = "ppnJournal",
                 isPartOfBook = "part of book",
                 isPartOfJournal = "part of journal",
+                enumeration = "volume,issue",
             )
 
         val TEST_RIGHT =
